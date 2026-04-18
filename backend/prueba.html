@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Prueba de Backend - Liga</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #e0e7ff; }
+        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 4px solid #ff6b00; }
+        input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #ff6b00; color: white; border: none; cursor: pointer; font-weight: bold; font-size: 16px; }
+        button:hover { background: #cc5500; }
+        li { margin-bottom: 10px; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <h1>🏀 Panel de Prueba (Frontend Básico)</h1>
+
+    <div class="card">
+        <h2>1. Entrar como Admin</h2>
+        <input type="email" id="email" placeholder="Email" value="cristian61020@gmail.com">
+        <input type="password" id="password" placeholder="Contraseña" value="admin123">
+        <button onclick="hacerLogin()">Obtener Pase VIP (Login)</button>
+        <p id="login-status" style="color: green; font-weight: bold;"></p>
+    </div>
+
+    <div class="card">
+        <h2>2. Crear Equipo (Requiere Login)</h2>
+        <input type="text" id="name" placeholder="Nombre del Equipo">
+        <input type="text" id="coach" placeholder="Nombre del Entrenador">
+        <input type="number" id="points" placeholder="Puntos (ej: 10)">
+        <button onclick="crearEquipo()">Guardar Equipo en Base de Datos</button>
+        <button onclick="simularPartido()" style="background: orange; padding: 10px; margin-top: 20px; cursor: pointer;">
+    🏀 Simular Partido: Lions vs Tigres
+</button>
+    </div>
+
+    <div class="card">
+        <h2>3. Tabla de Posiciones Pública</h2>
+        <button onclick="cargarEquipos()" style="background: #333;">Refrescar Tabla</button>
+        <ul id="lista-equipos"></ul>
+    </div>
+
+    <script>
+        let miTokenVIP = ""; 
+
+        async function hacerLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const response = await fetch('http://localhost:3000/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                miTokenVIP = data.token; 
+                document.getElementById('login-status').innerText = "¡Logueado con éxito! Ya puedes crear y borrar equipos.";
+            } else {
+                alert("Error en Login: " + data.message);
+            }
+        }
+
+        async function crearEquipo() {
+            if (!miTokenVIP) { alert("¡Falta técnica! 🛑 Haz Login primero."); return; }
+            const name = document.getElementById('name').value;
+            const coach_name = document.getElementById('coach').value;
+            const points = document.getElementById('points').value;
+
+            const response = await fetch('http://localhost:3000/api/equipos', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${miTokenVIP}` 
+                },
+                body: JSON.stringify({ name, coach_name, points: Number(points) })
+            });
+            if (response.ok) {
+                alert("¡Equipo creado!");
+                cargarEquipos(); 
+            } else {
+                alert("Error al crear");
+            }
+        }
+
+        // --- NUEVA FUNCIÓN PARA BORRAR ---
+        async function borrarEquipo(id) {
+            if (!miTokenVIP) { alert("¡Falta técnica! 🛑 Haz Login primero para borrar."); return; }
+            
+            const confirmar = confirm("¿Seguro que quieres borrar este equipo?");
+            if (!confirmar) return;
+
+            const response = await fetch(`http://localhost:3000/api/equipos/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${miTokenVIP}` }
+            });
+
+            if (response.ok) {
+                alert("¡Equipo eliminado!");
+                cargarEquipos(); // Recargamos la lista
+            } else {
+                alert("Error al borrar");
+            }
+        }
+
+        async function simularPartido() {
+            if (!miTokenVIP) { alert("¡Falta técnica! 🛑 Haz Login primero."); return; }
+            
+            alert("Preparando el partido...");
+
+            // 1. Programamos el partido (ID 1 vs ID 2)
+            const resPartido = await fetch('http://localhost:3000/api/partidos', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${miTokenVIP}` 
+                },
+                body: JSON.stringify({ 
+                    local_team_id: 1, 
+                    visitor_team_id: 2, 
+                    match_date: '2026-05-10 20:00:00', 
+                    location: 'Estadio Central' 
+                })
+            });
+            const dataPartido = await resPartido.json();
+            const idDelPartido = dataPartido.partido.id;
+
+            // 2. Cargamos el resultado (Gana Lions 90 a 85)
+            const resResultado = await fetch(`http://localhost:3000/api/partidos/${idDelPartido}/resultado`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${miTokenVIP}` 
+                },
+                body: JSON.stringify({ local_points: 90, visitor_points: 85 })
+            });
+
+            if (resResultado.ok) {
+                alert("¡Final del partido! 🚨 Lions 90 - 85 Tigres. Mirá cómo se actualizan los puntos.");
+                cargarEquipos(); // Refrescamos la tabla para ver la magia
+            } else {
+                alert("Hubo un error en el VAR al cargar el resultado.");
+            }
+        }
+
+        // --- LISTA ACTUALIZADA CON BOTÓN DE BORRAR ---
+        async function cargarEquipos() {
+            const response = await fetch('http://localhost:3000/api/equipos');
+            const equipos = await response.json();
+            const lista = document.getElementById('lista-equipos');
+            lista.innerHTML = ""; 
+            
+            equipos.forEach(eq => {
+                const li = document.createElement('li');
+                // Agregamos un botón rojo al lado de cada equipo que llama a borrarEquipo(id)
+                li.innerHTML = `
+                    <strong>${eq.name}</strong> - Puntos: ${eq.points} 
+                    <button onclick="borrarEquipo(${eq.id})" style="background: red; width: auto; padding: 5px 10px; margin-left: 10px; font-size: 12px;">Borrar</button>
+                `;
+                lista.appendChild(li);
+            });
+        }
+
+        cargarEquipos();
+    </script>
+</body>
+</html>

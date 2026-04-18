@@ -1,0 +1,132 @@
+/* --- ADN NBA Series - TPO --- */
+
+/* 1. Definición de Variables de Color y Fuente */
+:root {
+  --nba-black: #000000;
+  --nba-blue: #1D428A;
+  --nba-red: #C8102E;
+  --nba-white: #FFFFFF;
+  --nba-bg-light: #F4F4F4;
+  --nba-text-dark: #333333;
+  --nba-border: #DDDDDD;
+  /* Usamos una fuente sans-serif potente y moderna */
+  --nba-font: 'Roboto', 'Segoe UI', sans-serif;
+}
+
+body {
+  margin: 0;
+  background-color: var(--nba-bg-light); /* Fondo gris suave para que las tarjetas resalten */
+  color: var(--nba-text-dark);
+  font-family: var(--nba-font);
+}
+
+/* 2. Barra de Navegación (Inspirado en image_5.png top bar) */
+nav {
+  background-color: var(--nba-black) !important; /* Fondo negro puro */
+  border-bottom: 2px solid var(--nba-red); /* Detalle rojo NBA abajo */
+  padding: 1rem 2rem !important;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+nav a {
+  transition: all 0.2s ease;
+  text-transform: uppercase; /* Todo en mayúsculas */
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-size: 0.85rem;
+}
+
+nav a:hover {
+  color: var(--nba-red) !important;
+  transform: translateY(-2px);
+}
+
+/* 3. Títulos con Carácter */
+h1 {
+  font-size: 2.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -2px;
+  color: var(--nba-black);
+  margin-top: 40px;
+}
+
+h2, h3 {
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--nba-black);
+  border-bottom: 3px solid var(--nba-blue);
+  display: inline-block;
+  padding-bottom: 5px;
+}
+
+/* 4. Tablas Estilo Estadísticas (Inspirado en image_7.png) */
+table {
+  background-color: var(--nba-white);
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* Sombra suave para la tabla */
+  margin-top: 20px;
+}
+
+thead tr {
+  background-color: #F9F9F9 !important; /* Cabecera gris muy claro */
+  border-bottom: 2px solid var(--nba-border);
+}
+
+th {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  color: #777; /* Texto gris para la cabecera, como en image_7.png */
+  letter-spacing: 1px;
+  padding: 15px !important;
+}
+
+td {
+  padding: 12px !important;
+  border-bottom: 1px solid #EEEEEE;
+  font-size: 0.95rem;
+}
+
+/* Resaltamos al Equipo en la tabla */
+td.team-name {
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--nba-black);
+  text-align: left;
+}
+
+/* 5. Botones con Fuerza */
+button {
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 1px;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+  border-radius: 4px !important;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.2);
+  transform: scale(1.03);
+}
+
+/* Inputs Premium */
+input, select {
+  border: 2px solid var(--nba-border) !important;
+  border-radius: 4px !important;
+  padding: 10px !important;
+}
+
+input:focus, select:focus {
+  border-color: var(--nba-blue) !important;
+  box-shadow: 0 0 0 3px rgba(29, 66, 138, 0.2);
+}
