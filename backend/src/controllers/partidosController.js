@@ -1,15 +1,16 @@
 const pool = require('../db');
 
 /**
- * GET - Obtener todos los partidos
- * Realiza una consulta a la base de datos uniendo la tabla "matches" con "teams"
- * dos veces (una para el equipo local y otra para el visitante) para obtener
- * los nombres de ambos equipos junto con los datos del partido.
- * Devuelve los partidos ordenados por ID de forma descendente (los más recientes primero).
+ * ¿Por qué existe esta función?
+ * Para armar el "Fixture" visual; es la que muestra quién juega contra quién (o quién ya jugó) en el frontend.
+ * 
+ * ¿Para qué se hace así (Decisiones de diseño)?
+ * - Hacemos dos `JOIN` a la tabla de `teams` en vez de uno. ¿Por qué? Porque un partido tiene a dos equipos 
+ *   independientes (local_team_id y visitor_team_id). Si no hiciéramos el JOIN, el frontend solo vería 
+ *   números de ID estáticos en vez de los nombres "Lions" o "Tigres".
  */
 const obtenerPartidos = async (req, res) => {
     try {
-        // Hacemos un JOIN 
         const result = await pool.query(`
             SELECT m.*, tl.name as local_name, tv.name as visitor_name 
             FROM matches m
@@ -25,14 +26,15 @@ const obtenerPartidos = async (req, res) => {
 };
 
 /**
- * POST - Programar (crear) un nuevo partido
- * Recibe del body: local_team_id, visitor_team_id, match_date, match_time y location.
- * Validaciones:
- *   - Verifica que los campos obligatorios (equipos y fecha) estén presentes.
- *   - Impide que un equipo juegue contra sí mismo.
- * Si pasan las validaciones, inserta el partido en la tabla "matches" con
- * valores por defecto para hora ("20:00"), ubicación ("Estadio Central") y
- * estado ("pendiente") en caso de no proporcionarse.
+ * ¿Por qué existe esta función?
+ * Para crear el calendario de juegos de toda la temporada regular.
+ * 
+ * ¿Para qué se hace así (Decisiones de diseño)?
+ * - Validamos que `local_team_id !== visitor_team_id`. Esto previene a nivel API una imposibilidad física 
+ *   (un equipo no puede jugar un partido contra sí mismo).
+ * - Forzamos el `status` a ser siempre `'pendiente'`. ¿Por qué no dejamos que el usuario lo mande? 
+ *   Para evitar corrupciones de datos donde alguien ingrese un partido recién creado como "jugado" 
+ *   y arruine la lógica de cálculo de puntos de la tabla general.
  */
 const crearPartido = async (req, res) => {
     const { local_team_id, visitor_team_id, match_date, match_time, location } = req.body;
@@ -57,11 +59,9 @@ const crearPartido = async (req, res) => {
 };
 
 /**
- * PUT - Editar / reprogramar un partido existente
- * Recibe el ID del partido por parámetro de ruta (req.params) y los nuevos
- * valores de match_date, match_time y location por el body.
- * Actualiza esos campos en la base de datos.
- * Si no se encuentra un partido con ese ID, responde con 404.
+ * ¿Por qué existe esta función?
+ * Para manejar contingencias climáticas, problemas de alquiler de estadio o reprogramaciones logísticas.
+ * Solo cambia la información temporal/espacial, no altera los equipos que se enfrentan.
  */
 const editarPartido = async (req, res) => {
     const { id } = req.params;
@@ -86,19 +86,18 @@ const editarPartido = async (req, res) => {
 };
 
 /**
- * PUT - Cargar el resultado de un partido finalizado
- * Recibe el ID del partido por parámetro y los puntos de ambos equipos
- * (local_points, visitor_points) por el body.
+ * ¿Por qué existe esta función?
+ * Esta es la columna vertebral de la liga. Toma el resultado crudo de un partido (local vs visitante) 
+ * e instantáneamente mueve la tabla de posiciones entera.
  * 
- * Usa una TRANSACCIÓN (BEGIN / COMMIT / ROLLBACK) para garantizar que todas
- * las operaciones se completen o ninguna se aplique:
- *   1. Actualiza el marcador del partido y cambia su estado a "jugado".
- *   2. Determina quién ganó, perdió o empató y asigna los puntos de tabla
- *      (3 por victoria, 1 por empate, 0 por derrota).
- *   3. Actualiza las estadísticas del equipo LOCAL en la tabla "teams"
- *      (partidos jugados, ganados, empatados, perdidos, puntos, puntos a favor/en contra).
- *   4. Hace lo mismo para el equipo VISITANTE.
- * Si ocurre cualquier error, ejecuta ROLLBACK para revertir todos los cambios.
+ * ¿Para qué se hace así (Decisiones de diseño)?
+ * - Usamos bloques `BEGIN`, `COMMIT`, y `ROLLBACK` (Concepto de TRANSACCIÓN ACID). 
+ *   ¿Por qué? Porque si modificamos el puntaje del equipo local, y justo antes de modificar al visitante 
+ *   se corta la luz o crashea el servidor Node, los equipos terminarían "desfasados" en sus puntos totales.
+ *   Usando `BEGIN/COMMIT`, le decimos a PostgreSQL: "O aplicás todo el bloque junto, o no cambies nada."
+ * - Cálculos en JavaScript antes de enviar: Calculamos local_won/tied/lost en Node y lo mandamos como variable 
+ *   ($1, $2) al query final. Esto centraliza la regla de negocio (Tanto = Victoria = 3 pts) en nuestra capa 
+ *   controladora y no en la base de datos.
  */
 const cargarResultado = async (req, res) => {
     const { id } = req.params;
@@ -154,10 +153,8 @@ const cargarResultado = async (req, res) => {
 };
 
 /**
- * DELETE - Borrar / cancelar un partido
- * Recibe el ID del partido por parámetro de ruta y lo elimina de la base de datos.
- * No realiza validaciones adicionales (por ejemplo, no verifica si el partido
- * ya fue jugado antes de eliminarlo).
+ * ¿Por qué existe esta función?
+ * Para evitar "Partidos fantasma" que se programaron pero por fuerza mayor jamás se jugarán.
  */
 const borrarPartido = async (req, res) => {
     const { id } = req.params;

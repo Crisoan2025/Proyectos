@@ -1,12 +1,14 @@
 const pool = require('../db');
 
 /**
- * GET - Obtener todos los jugadores
- * Realiza una consulta con LEFT JOIN entre la tabla "players" y "teams" para
- * incluir el nombre del equipo al que pertenece cada jugador.
- * Se usa LEFT JOIN (en vez de JOIN) para que también se muestren jugadores
- * que no tengan equipo asignado (team_id = null).
- * Los resultados se ordenan alfabéticamente por apellido (surname ASC).
+ * ¿Por qué existe esta función?
+ * Para renderizar la sección de "Roster" (lista de jugadores) en el panel de administración
+ * y tener un pantallazo general de quién juega dónde.
+ * 
+ * ¿Para qué se hace así (Decisiones de diseño)?
+ * - Usamos `LEFT JOIN teams`: ¿Por qué LEFT JOIN y no un simple JOIN? Para que la consulta no devuelva 
+ *   una lista vacía para aquellos jugadores que momentáneamente no tienen equipo (agentes libres).
+ * - Ordenamos por `surname ASC` para facilitar visualmente la búsqueda del administrador.
  */
 const obtenerJugadores = async (req, res) => {
     try {
@@ -23,12 +25,13 @@ const obtenerJugadores = async (req, res) => {
 };
 
 /**
- * POST - Crear un nuevo jugador
- * Recibe del body: name, surname, category y team_id.
- * Validación: nombre y apellido son campos obligatorios; si faltan,
- * responde con un 400 (Bad Request).
- * Inserta el jugador en la tabla "players" y devuelve el registro creado
- * con todos sus campos gracias a RETURNING *.
+ * ¿Por qué existe esta función?
+ * Para incorporar nuevos talentos a la liga y asignarlos, opcionalmente, a un equipo activo.
+ * 
+ * ¿Para qué se hace así (Decisiones de diseño)?
+ * - Validamos `name` y `surname` agresivamente parando el flujo con un `return res.status(400)`. 
+ *   ¿Por qué? Porque un registro basura en la base de datos es peor que un error en pantalla. 
+ *   Obligamos a que la data entrante sea de calidad antes de siquiera tocar la base de datos.
  */
 const crearJugador = async (req, res) => {
     const { name, surname, category, team_id } = req.body;
@@ -41,17 +44,19 @@ const crearJugador = async (req, res) => {
         );
         res.json(result.rows[0]);
     } catch (err) {
-        console.log("🚨 EL VAR DICE:", err.message); // <-- Esto nos va a decir la verdad
+        console.log("🚨 EL VAR DICE:", err.message); 
         res.status(500).json({ message: "Error al crear jugador" });
     }
 };
 
 /**
- * PUT - Editar un jugador existente
- * Recibe el ID del jugador por parámetro de ruta (req.params) y los nuevos
- * valores de name, surname, category y team_id por el body.
- * Actualiza todos esos campos en la tabla "players" para el jugador indicado.
- * Devuelve el registro actualizado junto con un mensaje de confirmación.
+ * ¿Por qué existe esta función?
+ * Para reflejar traspasos de jugadores entre equipos (trades) o corregir errores en sus categorías.
+ * 
+ * ¿Para qué se hace así (Decisiones de diseño)?
+ * - Pedimos todos los campos (`name`, `surname`, `category`, `team_id`) aunque solo vaya a cambiar uno. 
+ *   Para una app pequeña es más fácil hacer un UPDATE completo enviando todo el formulario desde el front, 
+ *   que hacer lógica compleja en el backend para actualizar campos dinámicos (PATCH dinámico).
  */
 const editarJugador = async (req, res) => {
     const { id } = req.params;
@@ -71,10 +76,8 @@ const editarJugador = async (req, res) => {
 };
 
 /**
- * DELETE - Borrar un jugador
- * Recibe el ID del jugador por parámetro de ruta y lo elimina de la tabla "players".
- * No verifica si el jugador existe antes de intentar borrarlo; si el ID no existe,
- * la consulta simplemente no afecta ninguna fila pero no lanza error.
+ * ¿Por qué existe esta función?
+ * Para remover jugadores que han sido suspendidos permanentemente, se han retirado o introducidos por error.
  */
 const borrarJugador = async (req, res) => {
     const { id } = req.params;

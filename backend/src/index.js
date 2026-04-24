@@ -16,7 +16,7 @@ const partidosRoutes = require('./routes/partidos');
 app.use('/api/auth', authRoutes);     // Ejemplo: POST /api/auth/login
 app.use('/api/equipos', equiposRoutes);   // Ejemplo: GET /api/equipos
 app.use('/api/jugadores', jugadoresRoutes); // Ejemplo: GET /api/jugadores
-app.use('/api/partidos', partidosRoutes);
+app.use('/api/partidos', partidosRoutes); // Ejemplo: GET /api/partidos
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

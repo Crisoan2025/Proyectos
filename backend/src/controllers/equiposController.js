@@ -1,5 +1,15 @@
 const pool = require('../db');
 
+/**
+ * ¿Por qué existe esta función?
+ * Para alimentar la tabla de posiciones principal (Standings) que ven todos los usuarios en la página de inicio.
+ * 
+ * ¿Para qué se hace así (Decisiones de diseño)?
+ * - El cálculo `(points_for - points_against) AS goal_difference`: Lo calculamos directamente en SQL ("al vuelo")
+ *   porque es más eficiente que traer todos los datos y hacer la resta en JavaScript.
+ * - El `ORDER BY points DESC, goal_difference DESC, points_for DESC`: Esta es la regla oficial de desempate
+ *   en ligas de baloncesto. Si hay empate en puntos, define la diferencia de tantos y luego los tantos a favor.
+ */
 const obtenerEquipos = async (req, res) => {
     try {
         const result = await pool.query(`
@@ -13,6 +23,17 @@ const obtenerEquipos = async (req, res) => {
     }
 };
 
+/**
+ * ¿Por qué existe esta función?
+ * Para poder ver el detalle de un equipo específico junto con todo su "roster" (lista de jugadores)
+ * en una sola vista, ideal para páginas de perfil de equipo.
+ * 
+ * ¿Para qué se hace así (Decisiones de diseño)?
+ * - Hacemos dos consultas separadas (primero el equipo, luego los jugadores) en vez de un solo JOIN masivo. 
+ *   ¿Por qué? Porque si usáramos un JOIN profundo, los datos del equipo se repetirían por cada jugador 
+ *   en el resultado, haciendo que el backend mande datos redundantes al frontend. 
+ *   Así enviamos un JSON limpio: `{ ...datos_equipo, jugadores: [...] }`.
+ */
 const obtenerEquipoPorId = async (req, res) => {
     const { id } = req.params;
     try {
@@ -32,8 +53,18 @@ const obtenerEquipoPorId = async (req, res) => {
     }
 };
 
+/**
+ * ¿Por qué existe esta función?
+ * Para permitir que los administradores inscriban nuevas franquicias o equipos en la liga.
+ * 
+ * ¿Para qué se hace así (Decisiones de diseño)?
+ * - Valores por defecto (`stadium || 'Estadio Municipal'`): Lo usamos para garantizar 
+ *   que la base de datos no tenga campos nulos críticos si el admin olvida llenar un dato, 
+ *   manteniendo la integridad visual en el frontend.
+ * - `RETURNING *`: Evita tener que hacer un `SELECT` extra inmediatamente después del `INSERT`
+ *   para devolverle al frontend el equipo recién creado con su nuevo ID asignado por la BD.
+ */
 const crearEquipo = async (req, res) => {
-    // 1. Agregamos stadium a lo que recibimos del frontend
     const { name, coach_name, stadium } = req.body;
 
     if (!name) return res.status(400).json({ error: "El nombre del equipo es obligatorio." });
@@ -41,7 +72,6 @@ const crearEquipo = async (req, res) => {
 
     try {
         const result = await pool.query(
-            // 2. Agregamos stadium a la consulta SQL
             'INSERT INTO teams (name, coach_name, stadium) VALUES ($1, $2, $3) RETURNING *',
             [name, coach_name, stadium || 'Estadio Municipal'] 
         );
@@ -51,6 +81,12 @@ const crearEquipo = async (req, res) => {
         res.status(500).json({ error: "Error al crear el equipo" });
     }
 };
+
+/**
+ * ¿Por qué existe esta función?
+ * Para corregir errores de tipeo o actualizar datos (ej: cambio de entrenador o mudanza de estadio) 
+ * sin tener que borrar y recrear el equipo, lo cual destruiría su historial de partidos.
+ */
 const editarEquipo = async (req, res) => {
     const { id } = req.params;
     const { name, coach_name, stadium } = req.body;
@@ -65,6 +101,15 @@ const editarEquipo = async (req, res) => {
     }
 };
 
+/**
+ * ¿Por qué existe esta función?
+ * Para dar de baja a un equipo que abandona la liga.
+ * 
+ * ¿Qué cuidado debemos tener aquí?
+ * Si borramos un equipo que ya ha jugado partidos, en una base de datos relacional estricta esto 
+ * fallaría por llaves foráneas. Asumimos que la BD tiene configurado `ON DELETE CASCADE` o que  
+ * el admin comprende que borrar equipos a mitad de temporada altera las estadísticas globales.
+ */
 const borrarEquipo = async (req, res) => {
     const { id } = req.params;
     try {

@@ -2,6 +2,20 @@ const pool = require('../db');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
+/**
+ * ¿Por qué existe esta función?
+ * Para permitir que solo los administradores autorizados puedan acceder al panel de control (Panel VIP)
+ * y realizar acciones críticas como crear equipos, programar partidos o cargar resultados, 
+ * evitando que cualquier visitante público manipule la base de datos de la liga.
+ * 
+ * ¿Para qué se hace así (Decisiones de diseño)?
+ * - Usamos `bcrypt.compare`: ¿Por qué no comparar la contraseña directamente? Porque las contraseñas
+ *   jamás se guardan en texto plano en la base de datos por seguridad. Se comparan las versiones encriptadas.
+ * - Usamos `jwt.sign`: ¿Para qué? Para darles a los administradores un "pase VIP" temporal. 
+ *   Al no usar sesiones tradicionales, nuestro backend se mantiene ligero (stateless).
+ * - Expiración (`expiresIn: '1h'`): ¿Por qué expira en una hora? Para reducir el daño si alguien deja
+ *   su sesión de administrador abierta en una computadora pública. Si se va, la sesión muere sola poco después.
+ */
 const login = async (req, res) => {
     const { email, password } = req.body;
     try {
