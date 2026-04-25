@@ -1,6 +1,22 @@
-/* --- ADN NBA Series - TPO --- */
+/* ============================================================
+   App.css — Design System: Liga de Baloncesto TPO
+   ============================================================
+   Estructura:
+   1. Variables (Design Tokens)
+   2. Barra de Navegación
+   3. Tipografía
+   4. Layout de páginas
+   5. Tablas (Standings & Admin)
+   6. Cards
+   7. Formularios
+   8. Botones
+   9. Inputs
+   10. Utilidades
+   ============================================================ */
 
-/* 1. Definición de Variables de Color y Fuente */
+/* ============================================================
+   1. VARIABLES — Design Tokens NBA
+   ============================================================ */
 :root {
   --nba-black: #000000;
   --nba-blue: #1D428A;
@@ -9,42 +25,49 @@
   --nba-bg-light: #F4F4F4;
   --nba-text-dark: #333333;
   --nba-border: #DDDDDD;
-  /* Usamos una fuente sans-serif potente y moderna */
+  --nba-green: #2e7d32;
+  --nba-warning: #f57c00;
   --nba-font: 'Roboto', 'Segoe UI', sans-serif;
 }
 
 body {
   margin: 0;
-  background-color: var(--nba-bg-light); /* Fondo gris suave para que las tarjetas resalten */
+  background-color: var(--nba-bg-light);
   color: var(--nba-text-dark);
   font-family: var(--nba-font);
 }
 
-/* 2. Barra de Navegación (Inspirado en image_5.png top bar) */
-nav {
-  background-color: var(--nba-black) !important; /* Fondo negro puro */
-  border-bottom: 2px solid var(--nba-red); /* Detalle rojo NBA abajo */
-  padding: 1rem 2rem !important;
+/* ============================================================
+   2. BARRA DE NAVEGACIÓN
+   ============================================================ */
+.main-nav {
+  background-color: var(--nba-black);
+  border-bottom: 2px solid var(--nba-red);
+  padding: 1rem 2rem;
   display: flex;
   justify-content: center;
   gap: 30px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-nav a {
-  transition: all 0.2s ease;
-  text-transform: uppercase; /* Todo en mayúsculas */
+.nav-link {
+  color: var(--nba-white);
+  text-decoration: none;
+  text-transform: uppercase;
   font-weight: 700;
   letter-spacing: 1px;
   font-size: 0.85rem;
+  transition: all 0.2s ease;
 }
 
-nav a:hover {
-  color: var(--nba-red) !important;
+.nav-link:hover {
+  color: var(--nba-red);
   transform: translateY(-2px);
 }
 
-/* 3. Títulos con Carácter */
+/* ============================================================
+   3. TIPOGRAFÍA
+   ============================================================ */
 h1 {
   font-size: 2.5rem;
   font-weight: 900;
@@ -58,12 +81,111 @@ h2, h3 {
   font-weight: 800;
   text-transform: uppercase;
   color: var(--nba-black);
+}
+
+/* ============================================================
+   4. LAYOUT DE PÁGINAS
+   ============================================================ */
+.page-container {
+  text-align: center;
+  padding: 20px;
+}
+
+/* Home */
+.home-container {
+  padding: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.standings-card {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  margin-top: 20px;
+}
+
+.standings-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.standings-icon {
+  font-size: 30px;
+  margin-right: 15px;
+}
+
+.standings-title {
+  margin: 0;
   border-bottom: 3px solid var(--nba-blue);
   display: inline-block;
   padding-bottom: 5px;
 }
 
-/* 4. Tablas Estilo Estadísticas (Inspirado en image_7.png) */
+.standings-subtitle {
+  color: #666;
+  margin-bottom: 25px;
+  font-size: 15px;
+}
+
+/* Login */
+.login-container {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: center;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+/* Admin */
+.admin-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--nba-black);
+  color: white;
+  padding: 15px 25px;
+  border-radius: 8px;
+  border-bottom: 4px solid var(--nba-red);
+}
+
+.admin-header__title {
+  margin: 0;
+  color: white;
+  border: none;
+}
+
+.admin-forms-row {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.admin-tables-row {
+  display: flex;
+  gap: 20px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+/* ============================================================
+   5. TABLAS
+   ============================================================ */
 table {
   background-color: var(--nba-white);
   border-collapse: separate;
@@ -71,30 +193,29 @@ table {
   width: 100%;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* Sombra suave para la tabla */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   margin-top: 20px;
 }
 
 thead tr {
-  background-color: #F9F9F9 !important; /* Cabecera gris muy claro */
+  background-color: #F9F9F9;
   border-bottom: 2px solid var(--nba-border);
 }
 
 th {
   text-transform: uppercase;
   font-size: 0.75rem;
-  color: #777; /* Texto gris para la cabecera, como en image_7.png */
+  color: #777;
   letter-spacing: 1px;
-  padding: 15px !important;
+  padding: 15px;
 }
 
 td {
-  padding: 12px !important;
+  padding: 12px;
   border-bottom: 1px solid #EEEEEE;
   font-size: 0.95rem;
 }
 
-/* Resaltamos al Equipo en la tabla */
 td.team-name {
   font-weight: 700;
   text-transform: uppercase;
@@ -102,16 +223,137 @@ td.team-name {
   text-align: left;
 }
 
-/* 5. Botones con Fuerza */
+.team-rank {
+  color: #BBB;
+  margin-right: 10px;
+  font-size: 14px;
+  font-weight: normal;
+}
+
+/* Celdas especiales de standings */
+.th-highlight-gray {
+  background: #F0F0F0;
+  color: #333;
+}
+
+.th-highlight-red {
+  background: var(--nba-red);
+  color: white;
+}
+
+.cell-alt {
+  background: #F9F9F9;
+}
+
+.cell-points {
+  font-weight: 900;
+  font-size: 1.2rem;
+  color: var(--nba-blue);
+}
+
+/* Celdas de partidos */
+.match-info {
+  font-size: 12px;
+  color: #777;
+  text-align: center;
+}
+
+.match-team {
+  font-weight: bold;
+  font-size: 14px;
+  color: var(--nba-black);
+}
+
+.match-score {
+  color: #999;
+  font-weight: 900;
+  margin: 4px 0;
+}
+
+.match-score--played {
+  color: var(--nba-red);
+}
+
+.badge-final {
+  color: var(--nba-green);
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+/* ============================================================
+   6. CARDS
+   ============================================================ */
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  flex: 1;
+  min-width: 300px;
+}
+
+.card--wide {
+  min-width: 400px;
+}
+
+.card--extra-wide {
+  min-width: 500px;
+}
+
+.card--editing {
+  border: 2px solid var(--nba-red);
+}
+
+.card-title {
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+  border-bottom: 3px solid var(--nba-blue);
+  display: inline-block;
+  padding-bottom: 5px;
+}
+
+.card-title--red {
+  border-bottom-color: var(--nba-red);
+}
+
+.card-title--green {
+  border-bottom-color: var(--nba-green);
+}
+
+/* ============================================================
+   7. FORMULARIOS
+   ============================================================ */
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+}
+
+/* ============================================================
+   8. BOTONES
+   ============================================================ */
 button {
   text-transform: uppercase;
   font-weight: 800;
   letter-spacing: 1px;
   font-size: 0.8rem;
   transition: all 0.2s ease;
-  border-radius: 4px !important;
+  border-radius: 4px;
   border: none;
   cursor: pointer;
+  padding: 12px;
+  color: white;
 }
 
 button:hover {
@@ -119,14 +361,104 @@ button:hover {
   transform: scale(1.03);
 }
 
-/* Inputs Premium */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary {
+  background: var(--nba-red);
+  color: white;
+}
+
+.btn-blue {
+  background: var(--nba-blue);
+  color: white;
+}
+
+.btn-green {
+  background: var(--nba-green);
+  color: white;
+}
+
+.btn-danger {
+  background: #d32f2f;
+  color: white;
+}
+
+.btn-warning {
+  background: var(--nba-warning);
+  color: white;
+}
+
+.btn-secondary {
+  background: #777;
+  color: white;
+  padding: 8px;
+  margin-top: -5px;
+}
+
+.btn-sm {
+  padding: 5px 12px;
+  font-size: 11px;
+}
+
+/* ============================================================
+   9. INPUTS
+   ============================================================ */
 input, select {
-  border: 2px solid var(--nba-border) !important;
-  border-radius: 4px !important;
-  padding: 10px !important;
+  border: 2px solid var(--nba-border);
+  border-radius: 4px;
+  padding: 10px;
+  font-size: 16px;
 }
 
 input:focus, select:focus {
-  border-color: var(--nba-blue) !important;
+  border-color: var(--nba-blue);
   box-shadow: 0 0 0 3px rgba(29, 66, 138, 0.2);
+  outline: none;
+}
+
+/* ============================================================
+   10. UTILIDADES
+   ============================================================ */
+.text-center {
+  text-align: center;
+}
+
+.text-small {
+  font-size: 12px;
+}
+
+.text-muted {
+  color: #555;
+  font-size: 14px;
+}
+
+.text-won {
+  color: var(--nba-green);
+  font-weight: bold;
+}
+
+.text-lost {
+  color: #d32f2f;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+}
+
+.loading-text {
+  color: var(--nba-blue);
+  font-weight: bold;
+  padding: 20px;
+}
+
+.error-text {
+  color: var(--nba-red);
+  margin-top: 15px;
+  font-weight: bold;
 }
