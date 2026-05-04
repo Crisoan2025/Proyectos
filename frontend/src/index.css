@@ -1,27 +1,9 @@
-/* ============================================================
-   index.css — Reset y base mínima
-   ============================================================
-   POR QUÉ: Antes tenía variables de color (accent, etc.) que
-   conflictuaban con App.css y nunca se usaban.
-   PARA QUÉ: Solo contiene el reset básico y ajustes del #root.
-   Todo el design system vive en App.css.
-   ============================================================ */
-
-:root {
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-body {
-  margin: 0;
-}
-
+/* Reset mínimo — el design system completo vive en App.css */
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; }
 #root {
   max-width: 100%;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
 }
