@@ -2,22 +2,42 @@ const pool = require('../db');
 
 /**
  * ¿Por qué existe esta función?
- * Para armar el "Fixture" visual; es la que muestra quién juega contra quién (o quién ya jugó) en el frontend.
+ * Para armar el "Fixture" visual; muestra quién juega contra quién.
  * 
  * ¿Para qué se hace así (Decisiones de diseño)?
- * - Hacemos dos `JOIN` a la tabla de `teams` en vez de uno. ¿Por qué? Porque un partido tiene a dos equipos 
- *   independientes (local_team_id y visitor_team_id). Si no hiciéramos el JOIN, el frontend solo vería 
- *   números de ID estáticos en vez de los nombres "Lions" o "Tigres".
+ * - Ahora soporta filtros opcionales por temporada y categoría via query params.
+ * - Si no se manda season_id, usa la temporada activa por defecto.
  */
 const obtenerPartidos = async (req, res) => {
+    const { season_id, category } = req.query;
+
     try {
-        const result = await pool.query(`
+        let seasonFilter;
+        if (season_id) {
+            seasonFilter = season_id;
+        } else {
+            const activeSeason = await pool.query('SELECT id FROM seasons WHERE is_active = true LIMIT 1');
+            if (activeSeason.rows.length === 0) return res.json([]);
+            seasonFilter = activeSeason.rows[0].id;
+        }
+
+        let query = `
             SELECT m.*, tl.name as local_name, tv.name as visitor_name 
             FROM matches m
             JOIN teams tl ON m.local_team_id = tl.id
             JOIN teams tv ON m.visitor_team_id = tv.id
-            ORDER BY m.id DESC
-        `);
+            WHERE m.season_id = $1
+        `;
+        const params = [seasonFilter];
+
+        if (category) {
+            query += ` AND m.category = $2`;
+            params.push(category);
+        }
+
+        query += ` ORDER BY m.id DESC`;
+
+        const result = await pool.query(query, params);
         res.json(result.rows);
     } catch (err) {
         console.log(err.message);
@@ -27,14 +47,13 @@ const obtenerPartidos = async (req, res) => {
 
 /**
  * ¿Por qué existe esta función?
- * Para crear el calendario de juegos de toda la temporada regular.
+ * Para crear el calendario de juegos de la temporada.
  * 
  * ¿Para qué se hace así (Decisiones de diseño)?
- * - Validamos que `local_team_id !== visitor_team_id`. Esto previene a nivel API una imposibilidad física 
- *   (un equipo no puede jugar un partido contra sí mismo).
- * - Forzamos el `status` a ser siempre `'pendiente'`. ¿Por qué no dejamos que el usuario lo mande? 
- *   Para evitar corrupciones de datos donde alguien ingrese un partido recién creado como "jugado" 
- *   y arruine la lógica de cálculo de puntos de la tabla general.
+ * - Automáticamente asigna el season_id de la temporada activa.
+ * - Automáticamente toma la categoría del equipo local y la asigna al partido.
+ * - VALIDA que ambos equipos sean de la misma categoría. Un equipo Senior no puede
+ *   jugar contra uno Junior porque son niveles de competencia distintos.
  */
 const crearPartido = async (req, res) => {
     const { local_team_id, visitor_team_id, match_date, match_time, location } = req.body;
@@ -47,9 +66,32 @@ const crearPartido = async (req, res) => {
     }
 
     try {
+        // Obtener temporada activa
+        const activeSeason = await pool.query('SELECT id FROM seasons WHERE is_active = true LIMIT 1');
+        if (activeSeason.rows.length === 0) {
+            return res.status(400).json({ error: "No hay temporada activa. Creá una temporada primero." });
+        }
+        const seasonId = activeSeason.rows[0].id;
+
+        // Verificar que ambos equipos sean de la misma categoría
+        const localTeam = await pool.query('SELECT category FROM teams WHERE id = $1', [local_team_id]);
+        const visitorTeam = await pool.query('SELECT category FROM teams WHERE id = $1', [visitor_team_id]);
+
+        if (localTeam.rows.length === 0 || visitorTeam.rows.length === 0) {
+            return res.status(404).json({ error: "Uno de los equipos no existe." });
+        }
+
+        if (localTeam.rows[0].category !== visitorTeam.rows[0].category) {
+            return res.status(400).json({ 
+                error: `No se puede programar: ${localTeam.rows[0].category} vs ${visitorTeam.rows[0].category}. Los equipos deben ser de la misma categoría.` 
+            });
+        }
+
+        const matchCategory = localTeam.rows[0].category;
+
         const result = await pool.query(
-            'INSERT INTO matches (local_team_id, visitor_team_id, match_date, match_time, location, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-            [local_team_id, visitor_team_id, match_date, match_time || '20:00', location || 'Estadio Central', 'pendiente']
+            'INSERT INTO matches (local_team_id, visitor_team_id, match_date, match_time, location, status, season_id, category) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+            [local_team_id, visitor_team_id, match_date, match_time || '20:00', location || 'Estadio Central', 'pendiente', seasonId, matchCategory]
         );
         res.status(201).json({ message: "Partido programado", partido: result.rows[0] });
     } catch (err) {
@@ -60,8 +102,7 @@ const crearPartido = async (req, res) => {
 
 /**
  * ¿Por qué existe esta función?
- * Para manejar contingencias climáticas, problemas de alquiler de estadio o reprogramaciones logísticas.
- * Solo cambia la información temporal/espacial, no altera los equipos que se enfrentan.
+ * Para manejar reprogramaciones logísticas.
  */
 const editarPartido = async (req, res) => {
     const { id } = req.params;
@@ -87,17 +128,13 @@ const editarPartido = async (req, res) => {
 
 /**
  * ¿Por qué existe esta función?
- * Esta es la columna vertebral de la liga. Toma el resultado crudo de un partido (local vs visitante) 
- * e instantáneamente mueve la tabla de posiciones entera.
+ * Esta es la columna vertebral de la liga. Toma el resultado crudo de un partido
+ * e instantáneamente actualiza la tabla de posiciones de la temporada correspondiente.
  * 
  * ¿Para qué se hace así (Decisiones de diseño)?
- * - Usamos bloques `BEGIN`, `COMMIT`, y `ROLLBACK` (Concepto de TRANSACCIÓN ACID). 
- *   ¿Por qué? Porque si modificamos el puntaje del equipo local, y justo antes de modificar al visitante 
- *   se corta la luz o crashea el servidor Node, los equipos terminarían "desfasados" en sus puntos totales.
- *   Usando `BEGIN/COMMIT`, le decimos a PostgreSQL: "O aplicás todo el bloque junto, o no cambies nada."
- * - Cálculos en JavaScript antes de enviar: Calculamos local_won/tied/lost en Node y lo mandamos como variable 
- *   ($1, $2) al query final. Esto centraliza la regla de negocio (Tanto = Victoria = 3 pts) en nuestra capa 
- *   controladora y no en la base de datos.
+ * - Ahora actualiza `team_stats` (filtrado por team_id + season_id) en vez de la tabla `teams`.
+ *   Esto garantiza que los puntos se asignen a la temporada correcta.
+ * - Usamos transacciones ACID para que ambos equipos se actualicen juntos o ninguno.
  */
 const cargarResultado = async (req, res) => {
     const { id } = req.params;
@@ -121,6 +158,8 @@ const cargarResultado = async (req, res) => {
 
         if (!match) throw new Error("Partido no encontrado");
 
+        const seasonId = match.season_id;
+
         let local_won = 0, local_tied = 0, local_lost = 0, local_pts = 0;
         let visitor_won = 0, visitor_tied = 0, visitor_lost = 0, visitor_pts = 0;
 
@@ -132,17 +171,19 @@ const cargarResultado = async (req, res) => {
             local_tied = 1; visitor_tied = 1; local_pts = 1; visitor_pts = 1;
         }
 
+        // Actualizar team_stats del equipo LOCAL para esta temporada
         await pool.query(`
-            UPDATE teams SET played = played + 1, won = won + $1, tied = tied + $2, lost = lost + $3,
+            UPDATE team_stats SET played = played + 1, won = won + $1, tied = tied + $2, lost = lost + $3,
             points = points + $4, points_for = points_for + $5, points_against = points_against + $6
-            WHERE id = $7
-        `, [local_won, local_tied, local_lost, local_pts, local_points, visitor_points, match.local_team_id]);
+            WHERE team_id = $7 AND season_id = $8
+        `, [local_won, local_tied, local_lost, local_pts, local_points, visitor_points, match.local_team_id, seasonId]);
 
+        // Actualizar team_stats del equipo VISITANTE para esta temporada
         await pool.query(`
-            UPDATE teams SET played = played + 1, won = won + $1, tied = tied + $2, lost = lost + $3,
+            UPDATE team_stats SET played = played + 1, won = won + $1, tied = tied + $2, lost = lost + $3,
             points = points + $4, points_for = points_for + $5, points_against = points_against + $6
-            WHERE id = $7
-        `, [visitor_won, visitor_tied, visitor_lost, visitor_pts, visitor_points, local_points, match.visitor_team_id]);
+            WHERE team_id = $7 AND season_id = $8
+        `, [visitor_won, visitor_tied, visitor_lost, visitor_pts, visitor_points, local_points, match.visitor_team_id, seasonId]);
 
         await pool.query('COMMIT');
         res.json({ message: "¡Resultado cargado y posiciones actualizadas!" });
@@ -166,4 +207,4 @@ const borrarPartido = async (req, res) => {
     }
 };
 
-module.exports = { crearPartido, cargarResultado, editarPartido, borrarPartido, obtenerPartidos};
+module.exports = { crearPartido, cargarResultado, editarPartido, borrarPartido, obtenerPartidos };

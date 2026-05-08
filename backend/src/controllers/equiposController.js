@@ -2,42 +2,75 @@ const pool = require('../db');
 
 /**
  * ¿Por qué existe esta función?
- * Para alimentar la tabla de posiciones principal (Standings) que ven todos los usuarios en la página de inicio.
+ * Para alimentar la tabla de posiciones (Standings) que ven todos los usuarios.
  * 
  * ¿Para qué se hace así (Decisiones de diseño)?
- * - El cálculo `(points_for - points_against) AS goal_difference`: Lo calculamos directamente en SQL ("al vuelo")
- *   porque es más eficiente que traer todos los datos y hacer la resta en JavaScript.
- * - El `ORDER BY points DESC, goal_difference DESC, points_for DESC`: Esta es la regla oficial de desempate
- *   en ligas de baloncesto. Si hay empate en puntos, define la diferencia de tantos y luego los tantos a favor.
+ * - Ahora leemos de `team_stats` (JOIN con `teams`) filtrando por la temporada activa.
+ *   Esto permite que cada temporada tenga su propia tabla de posiciones independiente.
+ * - Aceptamos query params opcionales: `?category=Senior` y `?season_id=1` para filtrar.
+ *   Si no se mandan, muestra todos los equipos de la temporada activa.
+ * - El `ORDER BY` mantiene la regla de desempate: puntos > diferencia de tantos > tantos a favor.
  */
 const obtenerEquipos = async (req, res) => {
+    const { category, season_id } = req.query;
+
     try {
-        const result = await pool.query(`
-            SELECT *, (points_for - points_against) AS goal_difference 
-            FROM teams 
-            ORDER BY points DESC, goal_difference DESC, points_for DESC
-        `);
+        let seasonFilter;
+        if (season_id) {
+            seasonFilter = season_id;
+        } else {
+            const activeSeason = await pool.query('SELECT id FROM seasons WHERE is_active = true LIMIT 1');
+            if (activeSeason.rows.length === 0) return res.status(404).json({ error: "No hay temporada activa." });
+            seasonFilter = activeSeason.rows[0].id;
+        }
+
+        let query = `
+            SELECT t.id, t.name, t.coach_name, t.stadium, t.category,
+                   ts.played, ts.won, ts.tied, ts.lost, ts.points,
+                   ts.points_for, ts.points_against,
+                   (ts.points_for - ts.points_against) AS goal_difference
+            FROM teams t
+            JOIN team_stats ts ON t.id = ts.team_id
+            WHERE ts.season_id = $1
+        `;
+        const params = [seasonFilter];
+
+        if (category) {
+            query += ` AND t.category = $2`;
+            params.push(category);
+        }
+
+        query += ` ORDER BY ts.points DESC, (ts.points_for - ts.points_against) DESC, ts.points_for DESC`;
+
+        const result = await pool.query(query, params);
         res.json(result.rows);
     } catch (err) {
+        console.error(err.message);
         res.status(500).send('Error en el servidor');
     }
 };
 
 /**
  * ¿Por qué existe esta función?
- * Para poder ver el detalle de un equipo específico junto con todo su "roster" (lista de jugadores)
- * en una sola vista, ideal para páginas de perfil de equipo.
- * 
- * ¿Para qué se hace así (Decisiones de diseño)?
- * - Hacemos dos consultas separadas (primero el equipo, luego los jugadores) en vez de un solo JOIN masivo. 
- *   ¿Por qué? Porque si usáramos un JOIN profundo, los datos del equipo se repetirían por cada jugador 
- *   en el resultado, haciendo que el backend mande datos redundantes al frontend. 
- *   Así enviamos un JSON limpio: `{ ...datos_equipo, jugadores: [...] }`.
+ * Para ver el detalle de un equipo específico junto con su roster (jugadores)
+ * y sus estadísticas de la temporada activa.
  */
 const obtenerEquipoPorId = async (req, res) => {
     const { id } = req.params;
     try {
-        const equipoResult = await pool.query('SELECT *, (points_for - points_against) AS goal_difference FROM teams WHERE id = $1', [id]);
+        const activeSeason = await pool.query('SELECT id FROM seasons WHERE is_active = true LIMIT 1');
+        const seasonId = activeSeason.rows.length > 0 ? activeSeason.rows[0].id : null;
+
+        const equipoResult = await pool.query(`
+            SELECT t.*, 
+                   ts.played, ts.won, ts.tied, ts.lost, ts.points,
+                   ts.points_for, ts.points_against,
+                   (ts.points_for - ts.points_against) AS goal_difference
+            FROM teams t
+            LEFT JOIN team_stats ts ON t.id = ts.team_id AND ts.season_id = $2
+            WHERE t.id = $1
+        `, [id, seasonId]);
+
         if (equipoResult.rows.length === 0) {
             return res.status(404).json({ error: "Equipo no encontrado." });
         }
@@ -55,28 +88,41 @@ const obtenerEquipoPorId = async (req, res) => {
 
 /**
  * ¿Por qué existe esta función?
- * Para permitir que los administradores inscriban nuevas franquicias o equipos en la liga.
+ * Para inscribir nuevas franquicias en la liga.
  * 
  * ¿Para qué se hace así (Decisiones de diseño)?
- * - Valores por defecto (`stadium || 'Estadio Municipal'`): Lo usamos para garantizar 
- *   que la base de datos no tenga campos nulos críticos si el admin olvida llenar un dato, 
- *   manteniendo la integridad visual en el frontend.
- * - `RETURNING *`: Evita tener que hacer un `SELECT` extra inmediatamente después del `INSERT`
- *   para devolverle al frontend el equipo recién creado con su nuevo ID asignado por la BD.
+ * - Ahora recibe `category` (Senior o Junior) del body.
+ * - Al crear el equipo, automáticamente crea un registro en `team_stats` 
+ *   para la temporada activa con todo en 0.
  */
 const crearEquipo = async (req, res) => {
-    const { name, coach_name, stadium } = req.body;
+    const { name, coach_name, stadium, category } = req.body;
 
     if (!name) return res.status(400).json({ error: "El nombre del equipo es obligatorio." });
     if (!coach_name) return res.status(400).json({ error: "El nombre del entrenador es obligatorio." });
 
     try {
+        await pool.query('BEGIN');
+
         const result = await pool.query(
-            'INSERT INTO teams (name, coach_name, stadium) VALUES ($1, $2, $3) RETURNING *',
-            [name, coach_name, stadium || 'Estadio Municipal'] 
+            'INSERT INTO teams (name, coach_name, stadium, category) VALUES ($1, $2, $3, $4) RETURNING *',
+            [name, coach_name, stadium || 'Estadio Municipal', category || 'Senior']
         );
-        res.status(201).json(result.rows[0]);
+        const newTeam = result.rows[0];
+
+        // Crear stats en 0 para la temporada activa
+        const activeSeason = await pool.query('SELECT id FROM seasons WHERE is_active = true LIMIT 1');
+        if (activeSeason.rows.length > 0) {
+            await pool.query(
+                'INSERT INTO team_stats (team_id, season_id) VALUES ($1, $2)',
+                [newTeam.id, activeSeason.rows[0].id]
+            );
+        }
+
+        await pool.query('COMMIT');
+        res.status(201).json(newTeam);
     } catch (err) {
+        await pool.query('ROLLBACK');
         console.error(err.message);
         res.status(500).json({ error: "Error al crear el equipo" });
     }
@@ -84,17 +130,19 @@ const crearEquipo = async (req, res) => {
 
 /**
  * ¿Por qué existe esta función?
- * Para corregir errores de tipeo o actualizar datos (ej: cambio de entrenador o mudanza de estadio) 
- * sin tener que borrar y recrear el equipo, lo cual destruiría su historial de partidos.
+ * Para corregir errores de tipeo o actualizar datos del equipo.
  */
 const editarEquipo = async (req, res) => {
     const { id } = req.params;
-    const { name, coach_name, stadium } = req.body;
+    const { name, coach_name, stadium, category } = req.body;
 
     if (!name) return res.status(400).json({ error: "El nombre del equipo es obligatorio." });
     if (!coach_name) return res.status(400).json({ error: "El nombre del entrenador es obligatorio." });
     try {
-        const result = await pool.query('UPDATE teams SET name = $1, coach_name = $2, stadium = $3 WHERE id = $4 RETURNING *', [name, coach_name, stadium, id]);
+        const result = await pool.query(
+            'UPDATE teams SET name = $1, coach_name = $2, stadium = $3, category = $4 WHERE id = $5 RETURNING *',
+            [name, coach_name, stadium, category || 'Senior', id]
+        );
         res.json({ message: "Equipo actualizado", equipo: result.rows[0] });
     } catch (err) {
         res.status(500).send("Error al actualizar");
@@ -104,11 +152,7 @@ const editarEquipo = async (req, res) => {
 /**
  * ¿Por qué existe esta función?
  * Para dar de baja a un equipo que abandona la liga.
- * 
- * ¿Qué cuidado debemos tener aquí?
- * Si borramos un equipo que ya ha jugado partidos, en una base de datos relacional estricta esto 
- * fallaría por llaves foráneas. Asumimos que la BD tiene configurado `ON DELETE CASCADE` o que  
- * el admin comprende que borrar equipos a mitad de temporada altera las estadísticas globales.
+ * Las estadísticas en team_stats se borran automáticamente gracias a ON DELETE CASCADE.
  */
 const borrarEquipo = async (req, res) => {
     const { id } = req.params;

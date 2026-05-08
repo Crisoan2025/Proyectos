@@ -11,12 +11,14 @@ const authRoutes = require('./routes/auth');
 const equiposRoutes = require('./routes/equipos');
 const jugadoresRoutes = require('./routes/jugadores');
 const partidosRoutes = require('./routes/partidos');
+const temporadasRoutes = require('./routes/temporadas');
 
 // USAR LAS RUTAS (Definimos el prefijo /api)
 app.use('/api/auth', authRoutes);     // Ejemplo: POST /api/auth/login
 app.use('/api/equipos', equiposRoutes);   // Ejemplo: GET /api/equipos
 app.use('/api/jugadores', jugadoresRoutes); // Ejemplo: GET /api/jugadores
 app.use('/api/partidos', partidosRoutes); // Ejemplo: GET /api/partidos
+app.use('/api/temporadas', temporadasRoutes); // Ejemplo: GET /api/temporadas
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
