@@ -44,7 +44,7 @@ const crearJugador = async (req, res) => {
         );
         res.json(result.rows[0]);
     } catch (err) {
-        console.log("🚨 EL VAR DICE:", err.message); 
+        console.log("Error al crear jugador:", err.message);
         res.status(500).json({ message: "Error al crear jugador" });
     }
 };
