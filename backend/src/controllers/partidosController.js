@@ -1,4 +1,5 @@
 const pool = require('../db');
+const { getActiveSeasonId } = require('../helpers/seasonHelper');
 
 /**
  * ¿Por qué existe esta función?
@@ -12,14 +13,8 @@ const obtenerPartidos = async (req, res) => {
     const { season_id, category } = req.query;
 
     try {
-        let seasonFilter;
-        if (season_id) {
-            seasonFilter = season_id;
-        } else {
-            const activeSeason = await pool.query('SELECT id FROM seasons WHERE is_active = true LIMIT 1');
-            if (activeSeason.rows.length === 0) return res.json([]);
-            seasonFilter = activeSeason.rows[0].id;
-        }
+        const seasonFilter = season_id || await getActiveSeasonId();
+        if (!seasonFilter) return res.json([]);
 
         let query = `
             SELECT m.*, tl.name as local_name, tv.name as visitor_name 
@@ -40,8 +35,8 @@ const obtenerPartidos = async (req, res) => {
         const result = await pool.query(query, params);
         res.json(result.rows);
     } catch (err) {
-        console.log(err.message);
-        res.status(500).json({ message: "Error al obtener partidos" });
+        console.error(err.message);
+        res.status(500).json({ error: "Error al obtener partidos" });
     }
 };
 
@@ -67,11 +62,10 @@ const crearPartido = async (req, res) => {
 
     try {
         // Obtener temporada activa
-        const activeSeason = await pool.query('SELECT id FROM seasons WHERE is_active = true LIMIT 1');
-        if (activeSeason.rows.length === 0) {
+        const seasonId = await getActiveSeasonId();
+        if (!seasonId) {
             return res.status(400).json({ error: "No hay temporada activa. Creá una temporada primero." });
         }
-        const seasonId = activeSeason.rows[0].id;
 
         // Verificar que ambos equipos sean de la misma categoría
         const localTeam = await pool.query('SELECT category FROM teams WHERE id = $1', [local_team_id]);
@@ -189,7 +183,7 @@ const cargarResultado = async (req, res) => {
         res.json({ message: "¡Resultado cargado y posiciones actualizadas!" });
     } catch (err) {
         await pool.query('ROLLBACK');
-        res.status(500).send("Error al procesar el resultado");
+        res.status(500).json({ error: "Error al procesar el resultado" });
     }
 };
 
@@ -203,7 +197,7 @@ const borrarPartido = async (req, res) => {
         await pool.query('DELETE FROM matches WHERE id = $1', [id]);
         res.json({ message: "Partido cancelado y eliminado" });
     } catch (err) {
-        res.status(500).send("Error al borrar el partido");
+        res.status(500).json({ error: "Error al borrar el partido" });
     }
 };
 

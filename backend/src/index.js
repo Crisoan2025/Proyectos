@@ -20,6 +20,17 @@ app.use('/api/jugadores', jugadoresRoutes); // Ejemplo: GET /api/jugadores
 app.use('/api/partidos', partidosRoutes); // Ejemplo: GET /api/partidos
 app.use('/api/temporadas', temporadasRoutes); // Ejemplo: GET /api/temporadas
 
+/**
+ * ¿Por qué existe este middleware?
+ * Para atrapar cualquier error no capturado por los controllers individuales.
+ * Sin esto, Express devolvería un HTML genérico de error que el frontend no puede parsear.
+ * Con esto, siempre devolvemos JSON estructurado: { error: "mensaje" }.
+ */
+app.use((err, req, res, next) => {
+    console.error('Error no capturado:', err.stack);
+    res.status(500).json({ error: "Error interno del servidor" });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Servidor entrando en el puerto ${PORT}`);

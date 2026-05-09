@@ -20,7 +20,7 @@ const obtenerJugadores = async (req, res) => {
         `);
         res.json(result.rows);
     } catch (err) {
-        res.status(500).send('Error al obtener jugadores');
+        res.status(500).json({ error: 'Error al obtener jugadores' });
     }
 };
 
@@ -71,7 +71,7 @@ const editarJugador = async (req, res) => {
         );
         res.json({ message: "Jugador actualizado", jugador: result.rows[0] });
     } catch (err) {
-        res.status(500).send("Error al actualizar");
+        res.status(500).json({ error: "Error al actualizar" });
     }
 };
 
@@ -85,7 +85,7 @@ const borrarJugador = async (req, res) => {
         await pool.query('DELETE FROM players WHERE id = $1', [id]);
         res.json({ message: "Jugador eliminado" });
     } catch (err) {
-        res.status(500).send("Error al borrar");
+        res.status(500).json({ error: "Error al borrar" });
     }
 };
 

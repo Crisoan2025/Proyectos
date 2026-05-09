@@ -60,18 +60,15 @@ const crearTemporada = async (req, res) => {
         );
         const newSeason = seasonResult.rows[0];
 
-        // Inicializar team_stats en 0 para todos los equipos existentes
-        const teams = await pool.query('SELECT id FROM teams');
-        for (const team of teams.rows) {
-            await pool.query(
-                'INSERT INTO team_stats (team_id, season_id) VALUES ($1, $2)',
-                [team.id, newSeason.id]
-            );
-        }
+        // Inicializar team_stats en 0 para todos los equipos en un solo query (evita N+1)
+        const statsResult = await pool.query(
+            'INSERT INTO team_stats (team_id, season_id) SELECT id, $1 FROM teams RETURNING team_id',
+            [newSeason.id]
+        );
 
         await pool.query('COMMIT');
         res.status(201).json({ 
-            message: `¡Temporada "${name}" creada! ${teams.rows.length} equipos inicializados.`, 
+            message: `¡Temporada "${name}" creada! ${statsResult.rowCount} equipos inicializados.`, 
             temporada: newSeason 
         });
     } catch (err) {

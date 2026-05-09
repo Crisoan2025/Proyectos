@@ -1,4 +1,5 @@
 const pool = require('../db');
+const { getActiveSeasonId } = require('../helpers/seasonHelper');
 
 /**
  * ¿Por qué existe esta función?
@@ -15,14 +16,8 @@ const obtenerEquipos = async (req, res) => {
     const { category, season_id } = req.query;
 
     try {
-        let seasonFilter;
-        if (season_id) {
-            seasonFilter = season_id;
-        } else {
-            const activeSeason = await pool.query('SELECT id FROM seasons WHERE is_active = true LIMIT 1');
-            if (activeSeason.rows.length === 0) return res.status(404).json({ error: "No hay temporada activa." });
-            seasonFilter = activeSeason.rows[0].id;
-        }
+        const seasonFilter = season_id || await getActiveSeasonId();
+        if (!seasonFilter) return res.status(404).json({ error: "No hay temporada activa." });
 
         let query = `
             SELECT t.id, t.name, t.coach_name, t.stadium, t.category,
@@ -46,7 +41,7 @@ const obtenerEquipos = async (req, res) => {
         res.json(result.rows);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Error en el servidor');
+        res.status(500).json({ error: "Error en el servidor" });
     }
 };
 
@@ -58,8 +53,7 @@ const obtenerEquipos = async (req, res) => {
 const obtenerEquipoPorId = async (req, res) => {
     const { id } = req.params;
     try {
-        const activeSeason = await pool.query('SELECT id FROM seasons WHERE is_active = true LIMIT 1');
-        const seasonId = activeSeason.rows.length > 0 ? activeSeason.rows[0].id : null;
+        const seasonId = await getActiveSeasonId();
 
         const equipoResult = await pool.query(`
             SELECT t.*, 
@@ -82,7 +76,7 @@ const obtenerEquipoPorId = async (req, res) => {
             jugadores: jugadoresResult.rows
         });
     } catch (err) {
-        res.status(500).send('Error al obtener el equipo');
+        res.status(500).json({ error: "Error al obtener el equipo" });
     }
 };
 
@@ -111,11 +105,11 @@ const crearEquipo = async (req, res) => {
         const newTeam = result.rows[0];
 
         // Crear stats en 0 para la temporada activa
-        const activeSeason = await pool.query('SELECT id FROM seasons WHERE is_active = true LIMIT 1');
-        if (activeSeason.rows.length > 0) {
+        const seasonId = await getActiveSeasonId();
+        if (seasonId) {
             await pool.query(
                 'INSERT INTO team_stats (team_id, season_id) VALUES ($1, $2)',
-                [newTeam.id, activeSeason.rows[0].id]
+                [newTeam.id, seasonId]
             );
         }
 
@@ -145,7 +139,7 @@ const editarEquipo = async (req, res) => {
         );
         res.json({ message: "Equipo actualizado", equipo: result.rows[0] });
     } catch (err) {
-        res.status(500).send("Error al actualizar");
+        res.status(500).json({ error: "Error al actualizar" });
     }
 };
 
@@ -160,7 +154,7 @@ const borrarEquipo = async (req, res) => {
         await pool.query('DELETE FROM teams WHERE id = $1', [id]);
         res.json({ message: "¡Equipo eliminado!" });
     } catch (err) {
-        res.status(500).send("Error al borrar");
+        res.status(500).json({ error: "Error al borrar" });
     }
 };
 
