@@ -726,3 +726,393 @@ select option { background: var(--nba-dark); color: var(--nba-white); }
 .empty-state { text-align: center; padding: 24px; color: var(--nba-gray); }
 .loading-text { color: var(--nba-blue); font-weight: 600; padding: 24px; }
 .error-text { color: var(--nba-red); font-weight: 600; margin-top: 12px; }
+
+/* === 17. CATEGORY TABS === */
+.category-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.category-tab {
+  padding: 6px 16px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  background: transparent;
+  color: var(--nba-gray);
+  border: 1px solid var(--nba-border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.category-tab:hover {
+  color: var(--nba-white);
+  border-color: var(--nba-gray);
+}
+
+.category-tab--active {
+  background: var(--nba-blue);
+  color: var(--nba-white);
+  border-color: var(--nba-blue);
+}
+
+.category-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.category-badge--senior {
+  background: rgba(29, 66, 138, 0.2);
+  color: #5b8def;
+}
+
+.category-badge--junior {
+  background: rgba(0, 166, 81, 0.2);
+  color: var(--nba-green);
+}
+
+/* === 18. STANDINGS CONTROLS === */
+.standings__controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.standings__select {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  background: var(--nba-dark);
+  border: 1px solid var(--nba-border);
+  border-radius: 4px;
+  color: var(--nba-light-gray);
+  cursor: pointer;
+}
+
+.standings__tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--nba-border);
+}
+
+.standings__season-label {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: var(--nba-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* === 19. PUBLIC PAGES === */
+.public-page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.public-page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.public-page__title {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
+  border: none;
+  display: inline;
+}
+
+/* === 20. TEAMS GRID (Equipos page) === */
+.teams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.team-card {
+  background: var(--nba-card);
+  border: 1px solid var(--nba-border);
+  border-radius: 8px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.team-card:hover {
+  border-color: var(--nba-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.team-card__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.team-card__icon { font-size: 32px; }
+
+.team-card__name {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+  border: none;
+  display: inline;
+}
+
+.team-card__category {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--nba-blue);
+  letter-spacing: 0.5px;
+}
+
+.team-card__coach {
+  font-size: 0.85rem;
+  color: var(--nba-gray);
+  margin-bottom: 14px;
+}
+
+.team-card__label {
+  font-weight: 700;
+  color: var(--nba-light-gray);
+}
+
+.team-card__stats {
+  display: flex;
+  justify-content: space-around;
+  padding-top: 14px;
+  border-top: 1px solid var(--nba-border);
+}
+
+.team-card__stat { text-align: center; }
+
+.team-card__stat-value {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--nba-white);
+}
+
+.team-card__stat-value--pts { color: var(--nba-gold); }
+.team-card__stat-value--win { color: var(--nba-green); }
+.team-card__stat-value--loss { color: var(--nba-red); }
+
+.team-card__stat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--nba-gray);
+  margin-top: 2px;
+}
+
+/* Roster expandido */
+.team-card__roster {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--nba-border);
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.team-card__roster-title {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin: 0 0 10px;
+  border: none;
+  display: block;
+  color: var(--nba-white);
+}
+
+.team-card__roster-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.team-card__player {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 0.85rem;
+}
+
+.team-card__player:last-child { border-bottom: none; }
+
+.team-card__player-name {
+  color: var(--nba-light-gray);
+  font-weight: 600;
+}
+
+.team-card__player-cat {
+  font-size: 0.65rem;
+  color: var(--nba-gray);
+  text-transform: uppercase;
+}
+
+/* === 21. PLAYERS GRID (Jugadores page) === */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.search-bar__input {
+  flex: 1;
+  padding: 14px 18px;
+  background: var(--nba-card);
+  border: 1px solid var(--nba-border);
+  border-radius: 8px;
+  color: var(--nba-white);
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.search-bar__input:focus {
+  border-color: var(--nba-blue);
+  box-shadow: 0 0 0 3px rgba(29,66,138,0.15);
+  outline: none;
+}
+
+.search-bar__count {
+  font-size: 0.8rem;
+  color: var(--nba-gray);
+  white-space: nowrap;
+}
+
+.players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px;
+}
+
+.player-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--nba-card);
+  border: 1px solid var(--nba-border);
+  border-radius: 8px;
+  padding: 14px 18px;
+  transition: all 0.15s;
+}
+
+.player-card:hover {
+  border-color: var(--nba-border);
+  background: #222;
+}
+
+.player-card__avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--nba-blue), var(--nba-red));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 0.8rem;
+  color: var(--nba-white);
+  flex-shrink: 0;
+  letter-spacing: 1px;
+}
+
+.player-card__info { flex: 1; }
+
+.player-card__name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--nba-white);
+  margin: 0;
+  border: none;
+  display: block;
+}
+
+.player-card__team {
+  font-size: 0.75rem;
+  color: var(--nba-gray);
+}
+
+.player-card__badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: rgba(29, 66, 138, 0.2);
+  color: #5b8def;
+}
+
+.player-card__badge--junior {
+  background: rgba(0, 166, 81, 0.2);
+  color: var(--nba-green);
+}
+
+/* === 22. ADMIN SEASON SECTION === */
+.admin-season-section {
+  margin-top: 16px;
+}
+
+.admin-header__left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.admin-header__season {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--nba-gold);
+  background: rgba(249, 160, 27, 0.1);
+  border: 1px solid rgba(249, 160, 27, 0.25);
+  padding: 4px 12px;
+  border-radius: 4px;
+}
+
+.season-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.season-info__label {
+  font-size: 0.8rem;
+  color: var(--nba-gray);
+}
+
+.season-info__value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--nba-gold);
+}

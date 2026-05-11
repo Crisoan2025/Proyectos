@@ -3,7 +3,7 @@
 // ============================================================
 // POR QUÉ: Estaba embebido dentro de Admin.jsx (360 líneas).
 // PARA QUÉ: Componente reutilizable y enfocado en una sola
-// responsabilidad: crear un equipo nuevo.
+// responsabilidad: crear un equipo nuevo con categoría.
 // ============================================================
 
 import { useState } from 'react';
@@ -12,6 +12,7 @@ import api from '../services/api';
 const TeamForm = ({ onTeamCreated }) => {
   const [nombreEquipo, setNombreEquipo] = useState('');
   const [entrenador, setEntrenador] = useState('');
+  const [category, setCategory] = useState('Senior');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,11 +21,13 @@ const TeamForm = ({ onTeamCreated }) => {
         name: nombreEquipo,
         coach_name: entrenador,
         stadium: 'Estadio ' + nombreEquipo,
+        category,
       }, true);
 
       if (res.ok) {
         setNombreEquipo('');
         setEntrenador('');
+        setCategory('Senior');
         onTeamCreated();
         alert('¡Equipo fichado!');
       }
@@ -50,6 +53,10 @@ const TeamForm = ({ onTeamCreated }) => {
           value={entrenador}
           onChange={(e) => setEntrenador(e.target.value)}
         />
+        <select value={category} onChange={(e) => setCategory(e.target.value)}>
+          <option value="Senior">🏅 Senior</option>
+          <option value="Junior">🌱 Junior</option>
+        </select>
         <button type="submit" className="btn btn-primary">
           GUARDAR EQUIPO
         </button>

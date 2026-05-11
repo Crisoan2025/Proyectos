@@ -3,6 +3,8 @@ import { AuthProvider } from './context/AuthContext';
 import NavigationBar from './components/NavigationBar';
 import ScoreboardRibbon from './components/ScoreboardRibbon';
 import Home from './pages/Home';
+import Equipos from './pages/Equipos';
+import Jugadores from './pages/Jugadores';
 import Login from './pages/Login';
 import Admin from './pages/Admin';
 import './App.css';
@@ -19,6 +21,8 @@ function App() {
           
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/equipos" element={<Equipos />} />
+            <Route path="/jugadores" element={<Jugadores />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin" element={<Admin />} />
           </Routes>

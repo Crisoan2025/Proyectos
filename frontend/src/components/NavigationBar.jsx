@@ -26,9 +26,9 @@ const NavigationBar = () => {
         {/* Links centrales */}
         <div className="navbar__links">
           <Link to="/" className="navbar__link">Inicio</Link>
-          <Link to="/" className="navbar__link">Clasificación</Link>
-          <Link to="/" className="navbar__link">Equipos</Link>
-          <Link to="/" className="navbar__link">Jugadores</Link>
+          <Link to="/#standings" className="navbar__link">Clasificación</Link>
+          <Link to="/equipos" className="navbar__link">Equipos</Link>
+          <Link to="/jugadores" className="navbar__link">Jugadores</Link>
         </div>
 
         {/* Acciones (derecha) */}
