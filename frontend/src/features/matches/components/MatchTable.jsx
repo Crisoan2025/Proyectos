@@ -7,7 +7,7 @@
 // interactuar con cada partido (editar, borrar, cargar score).
 // ============================================================
 
-import api from '../services/api';
+import api from '../../../services/api';
 
 const MatchTable = ({ partidos, onMatchUpdated, onEditMatch }) => {
 

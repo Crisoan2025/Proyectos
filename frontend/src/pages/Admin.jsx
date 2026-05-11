@@ -8,24 +8,26 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import useApi from '../hooks/useApi';
+import { useAuth } from '../features/auth/context/AuthContext';
 import api from '../services/api';
-import TeamForm from '../components/TeamForm';
-import MatchForm from '../components/MatchForm';
-import PlayerForm from '../components/PlayerForm';
-import PlayerTable from '../components/PlayerTable';
-import MatchTable from '../components/MatchTable';
+import { useTeams } from '../features/teams/api/useTeams';
+import { useMatches } from '../features/matches/api/useMatches';
+import { usePlayers } from '../features/players/api/usePlayers';
+import TeamForm from '../features/teams/components/TeamForm';
+import MatchForm from '../features/matches/components/MatchForm';
+import PlayerForm from '../features/players/components/PlayerForm';
+import PlayerTable from '../features/players/components/PlayerTable';
+import MatchTable from '../features/matches/components/MatchTable';
 
 const Admin = () => {
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
   const matchFormRef = useRef(null);
 
-  // Custom hooks para cargar datos
-  const { data: equipos, reload: reloadEquipos } = useApi('/equipos');
-  const { data: partidos, reload: reloadPartidos } = useApi('/partidos');
-  const { data: jugadores, reload: reloadJugadores } = useApi('/jugadores');
+  // Custom hooks para cargar datos desde las features
+  const { teams: equipos, reload: reloadEquipos } = useTeams();
+  const { matches: partidos, reload: reloadPartidos } = useMatches();
+  const { players: jugadores, reload: reloadJugadores } = usePlayers();
 
   // Estado para temporadas
   const [temporadaActiva, setTemporadaActiva] = useState(null);

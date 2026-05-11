@@ -1,11 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './features/auth/context/AuthContext';
 import NavigationBar from './components/NavigationBar';
-import ScoreboardRibbon from './components/ScoreboardRibbon';
+import ScoreboardRibbon from './features/matches/components/ScoreboardRibbon';
 import Home from './pages/Home';
 import Equipos from './pages/Equipos';
 import Jugadores from './pages/Jugadores';
-import Login from './pages/Login';
+import Login from './features/auth/pages/Login';
 import Admin from './pages/Admin';
 import './App.css';
 

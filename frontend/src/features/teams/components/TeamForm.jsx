@@ -7,7 +7,7 @@
 // ============================================================
 
 import { useState } from 'react';
-import api from '../services/api';
+import api from '../../../services/api';
 
 const TeamForm = ({ onTeamCreated }) => {
   const [nombreEquipo, setNombreEquipo] = useState('');

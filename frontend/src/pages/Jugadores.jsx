@@ -7,10 +7,10 @@
 // ============================================================
 
 import { useState, useEffect, useMemo } from 'react';
-import useApi from '../hooks/useApi';
+import { usePlayers } from '../features/players/api/usePlayers';
 
 const Jugadores = () => {
-  const { data: jugadores, loading, error, reload } = useApi('/jugadores');
+  const { players: jugadores, loading, error, reload } = usePlayers();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
 

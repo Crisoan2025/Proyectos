@@ -8,7 +8,7 @@
 // ============================================================
 
 import { useState } from 'react';
-import api from '../services/api';
+import api from '../../../services/api';
 
 const PlayerForm = ({ equipos, onPlayerCreated }) => {
   const [nombre, setNombre] = useState('');

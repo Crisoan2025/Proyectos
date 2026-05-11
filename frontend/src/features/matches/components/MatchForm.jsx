@@ -9,7 +9,7 @@
 // ============================================================
 
 import { useState, forwardRef, useImperativeHandle } from 'react';
-import api from '../services/api';
+import api from '../../../services/api';
 
 const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
   const [localId, setLocalId] = useState('');

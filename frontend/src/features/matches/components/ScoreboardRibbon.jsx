@@ -9,7 +9,7 @@
 // ============================================================
 
 import { useEffect } from 'react';
-import useApi from '../hooks/useApi';
+import useApi from '../../../hooks/useApi';
 
 const ScoreboardRibbon = () => {
   const { data: partidos, reload } = useApi('/partidos');

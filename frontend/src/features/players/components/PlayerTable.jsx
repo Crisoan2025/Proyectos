@@ -7,7 +7,7 @@
 // y delega la acción de eliminar al padre.
 // ============================================================
 
-import api from '../services/api';
+import api from '../../../services/api';
 
 const PlayerTable = ({ jugadores, onPlayerDeleted }) => {
 
