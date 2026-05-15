@@ -44,46 +44,46 @@ const MatchTable = ({ partidos, onMatchUpdated, onEditMatch }) => {
   };
 
   return (
-    <div className="card card--extra-wide">
-      <h3 className="card-title">🏆 FIXTURE Y RESULTADOS</h3>
-      <table>
+    <div className="bg-nba-card p-6 rounded-lg border border-nba-border flex-1 min-w-[500px] overflow-x-auto">
+      <h3 className="font-heading text-base font-bold tracking-wide m-0 mb-4 pb-2.5 border-b-2 border-nba-blue text-nba-white block">🏆 FIXTURE Y RESULTADOS</h3>
+      <table className="w-full border-collapse bg-transparent mt-3">
         <thead>
-          <tr>
-            <th>Cuándo / Dónde</th>
-            <th>Encuentro</th>
-            <th>Score</th>
-            <th>Opciones</th>
+          <tr className="bg-white/5 border-b border-nba-border">
+            <th className="text-[0.7rem] font-semibold text-nba-gray uppercase tracking-widest p-3">Cuándo / Dónde</th>
+            <th className="text-[0.7rem] font-semibold text-nba-gray uppercase tracking-widest p-3">Encuentro</th>
+            <th className="text-[0.7rem] font-semibold text-nba-gray uppercase tracking-widest p-3">Score</th>
+            <th className="text-[0.7rem] font-semibold text-nba-gray uppercase tracking-widest p-3">Opciones</th>
           </tr>
         </thead>
         <tbody>
           {partidos.map((p) => (
-            <tr key={p.id}>
-              <td className="match-info">
-                <strong>{new Date(p.match_date).toLocaleDateString()} - {p.match_time || '20:00'}</strong>
+            <tr key={p.id} className="transition-colors hover:bg-white/5">
+              <td className="p-3 border-b border-nba-border/50 text-[0.75rem] text-nba-gray text-center">
+                <strong className="text-nba-lightgray">{new Date(p.match_date).toLocaleDateString()} - {p.match_time || '20:00'}</strong>
                 <br />
                 📍 {p.location || 'Estadio Central'}
               </td>
-              <td className="text-center">
-                <div className="match-team">{p.local_name}</div>
-                <div className={`match-score ${p.status === 'jugado' ? 'match-score--played' : ''}`}>
+              <td className="p-3 border-b border-nba-border/50 text-center">
+                <div className="font-bold text-[0.85rem] text-nba-white">{p.local_name}</div>
+                <div className={`font-black my-1 text-[1.1rem] ${p.status === 'jugado' ? 'text-nba-red' : 'text-nba-gray'}`}>
                   {p.status === 'jugado' ? `${p.local_points} - ${p.visitor_points}` : 'VS'}
                 </div>
-                <div className="match-team">{p.visitor_name}</div>
+                <div className="font-bold text-[0.85rem] text-nba-white">{p.visitor_name}</div>
               </td>
-              <td className="text-center">
+              <td className="p-3 border-b border-nba-border/50 text-center">
                 {p.status !== 'jugado' ? (
-                  <button onClick={() => handleCargarResultado(p.id)} className="btn btn-green btn-sm">
+                  <button onClick={() => handleCargarResultado(p.id)} className="font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] py-1.5 px-3 rounded border-none cursor-pointer text-white transition-all bg-nba-green hover:-translate-y-px">
                     Cargar
                   </button>
                 ) : (
-                  <span className="badge-final">FINAL</span>
+                  <span className="text-nba-green font-bold text-[0.7rem] uppercase tracking-[1px]">FINAL</span>
                 )}
               </td>
-              <td className="text-center">
+              <td className="p-3 border-b border-nba-border/50 text-center">
                 {p.status !== 'jugado' && (
-                  <div className="action-buttons">
-                    <button onClick={() => onEditMatch(p)} className="btn btn-warning btn-sm">✏️</button>
-                    <button onClick={() => handleBorrar(p.id)} className="btn btn-danger btn-sm">🗑️</button>
+                  <div className="flex gap-1.5 justify-center">
+                    <button onClick={() => onEditMatch(p)} className="font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] py-1.5 px-3 rounded border-none cursor-pointer text-black transition-all bg-nba-gold hover:-translate-y-px">✏️</button>
+                    <button onClick={() => handleBorrar(p.id)} className="font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] py-1.5 px-3 rounded border-none cursor-pointer text-white transition-all bg-[#d32f2f] hover:-translate-y-px">🗑️</button>
                   </div>
                 )}
               </td>
@@ -91,7 +91,7 @@ const MatchTable = ({ partidos, onMatchUpdated, onEditMatch }) => {
           ))}
           {partidos.length === 0 && (
             <tr>
-              <td colSpan="4" className="empty-state">No hay partidos programados.</td>
+              <td colSpan="4" className="text-center p-6 text-nba-gray border-b border-nba-border/50">No hay partidos programados.</td>
             </tr>
           )}
         </tbody>

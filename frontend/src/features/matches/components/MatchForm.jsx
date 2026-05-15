@@ -84,36 +84,36 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
   };
 
   return (
-    <div className={`card ${editandoPartidoId ? 'card--editing' : ''}`}>
-      <h3 className={`card-title ${editandoPartidoId ? 'card-title--red' : ''}`}>
+    <div className={`bg-nba-card p-6 rounded-lg flex-1 min-w-[300px] border ${editandoPartidoId ? 'border-nba-red' : 'border-nba-border'}`}>
+      <h3 className={`font-heading text-base font-bold tracking-wide m-0 mb-4 pb-2.5 border-b-2 block text-nba-white ${editandoPartidoId ? 'border-nba-red' : 'border-nba-blue'}`}>
         {editandoPartidoId ? '✏️ EDITAR PARTIDO' : '📅 PROGRAMAR PARTIDO'}
       </h3>
-      <form onSubmit={handleSubmit} className="admin-form">
-        <select value={localId} onChange={handleLocalChange} required>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
+        <select value={localId} onChange={handleLocalChange} required className="bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20">
           <option value="">Seleccionar Local...</option>
           {equipos.map((eq) => (
             <option key={eq.id} value={eq.id}>{eq.name}</option>
           ))}
         </select>
-        <select value={visitanteId} onChange={(e) => setVisitanteId(e.target.value)} required>
+        <select value={visitanteId} onChange={(e) => setVisitanteId(e.target.value)} required className="bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20">
           <option value="">Seleccionar Visitante...</option>
           {equipos.map((eq) => (
             <option key={eq.id} value={eq.id}>{eq.name}</option>
           ))}
         </select>
 
-        <div className="form-row">
-          <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required style={{ flex: 2 }} />
-          <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} required style={{ flex: 1 }} />
+        <div className="flex gap-2.5">
+          <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required className="flex-2 bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20" />
+          <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} required className="flex-1 bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20" />
         </div>
 
-        <input type="text" placeholder="Estadio / Lugar" value={lugar} onChange={(e) => setLugar(e.target.value)} required />
+        <input type="text" placeholder="Estadio / Lugar" value={lugar} onChange={(e) => setLugar(e.target.value)} required className="bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20 placeholder-nba-gray" />
 
-        <button type="submit" className={`btn ${editandoPartidoId ? 'btn-danger' : 'btn-blue'}`}>
+        <button type="submit" className={`font-body font-bold text-[0.8rem] uppercase tracking-[0.8px] py-3 px-4 rounded border-none cursor-pointer text-white transition-all hover:-translate-y-px mt-2 ${editandoPartidoId ? 'bg-[#d32f2f]' : 'bg-nba-blue hover:shadow-[0_4px_14px_rgba(29,66,138,0.4)]'}`}>
           {editandoPartidoId ? 'ACTUALIZAR PARTIDO' : 'PROGRAMAR'}
         </button>
         {editandoPartidoId && (
-          <button type="button" onClick={limpiarFormulario} className="btn btn-secondary">
+          <button type="button" onClick={limpiarFormulario} className="font-body font-bold text-[0.8rem] uppercase tracking-[0.8px] p-2 rounded border-none cursor-pointer text-white transition-all hover:-translate-y-px mt-1 bg-[#444]">
             CANCELAR EDICIÓN
           </button>
         )}

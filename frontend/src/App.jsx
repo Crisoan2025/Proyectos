@@ -7,7 +7,6 @@ import Equipos from './pages/Equipos';
 import Jugadores from './pages/Jugadores';
 import Login from './features/auth/pages/Login';
 import Admin from './pages/Admin';
-import './App.css';
 
 function App() {
   return (
@@ -16,8 +15,8 @@ function App() {
         <NavigationBar />
         <ScoreboardRibbon />
 
-        <div className="page-container">
-          <h1>Liga de Baloncesto TPO</h1>
+        <div className="text-center p-0">
+          <h1 className="hidden">Liga de Baloncesto TPO</h1>
           
           <Routes>
             <Route path="/" element={<Home />} />

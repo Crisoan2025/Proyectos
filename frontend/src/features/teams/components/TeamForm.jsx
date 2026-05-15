@@ -37,27 +37,29 @@ const TeamForm = ({ onTeamCreated }) => {
   };
 
   return (
-    <div className="card">
-      <h3 className="card-title">➕ INSCRIBIR EQUIPO</h3>
-      <form onSubmit={handleSubmit} className="admin-form">
+    <div className="bg-nba-card p-6 rounded-lg border border-nba-border flex-1 min-w-[300px]">
+      <h3 className="font-heading text-base font-bold tracking-wide m-0 mb-4 pb-2.5 border-b-2 border-nba-blue text-nba-white block">➕ INSCRIBIR EQUIPO</h3>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
         <input
           type="text"
           placeholder="Nombre"
           value={nombreEquipo}
           onChange={(e) => setNombreEquipo(e.target.value)}
           required
+          className="bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20 placeholder-nba-gray"
         />
         <input
           type="text"
           placeholder="DT"
           value={entrenador}
           onChange={(e) => setEntrenador(e.target.value)}
+          className="bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20 placeholder-nba-gray"
         />
-        <select value={category} onChange={(e) => setCategory(e.target.value)}>
+        <select value={category} onChange={(e) => setCategory(e.target.value)} className="bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20">
           <option value="Senior">🏅 Senior</option>
           <option value="Junior">🌱 Junior</option>
         </select>
-        <button type="submit" className="btn btn-primary">
+        <button type="submit" className="font-body font-bold text-[0.8rem] uppercase tracking-[0.8px] py-3 px-4 rounded border-none cursor-pointer text-white transition-all bg-nba-red hover:shadow-[0_4px_14px_rgba(200,16,46,0.4)] hover:-translate-y-px mt-2">
           GUARDAR EQUIPO
         </button>
       </form>

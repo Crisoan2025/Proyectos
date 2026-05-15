@@ -45,17 +45,18 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
-      <h2>🔑 Acceso Restringido</h2>
-      <p>Ingresá tus credenciales de Administrador</p>
+    <div className="max-w-[420px] mx-auto mt-20 mb-20 p-10 bg-nba-card rounded-xl border border-nba-border text-center shadow-lg">
+      <h2 className="font-heading text-3xl font-black uppercase tracking-wide text-nba-white mb-2">🔑 Acceso Restringido</h2>
+      <p className="text-nba-gray text-[0.9rem] mb-6">Ingresá tus credenciales de Administrador</p>
       
-      <form onSubmit={handleLogin} className="login-form">
+      <form onSubmit={handleLogin} className="flex flex-col gap-4">
         <input 
           type="email" 
           placeholder="Tu correo (ej: admin@tpo.com)" 
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          className="bg-nba-dark border border-nba-border rounded px-4 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20 placeholder-nba-gray"
         />
         <input 
           type="password" 
@@ -63,13 +64,14 @@ const Login = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          className="bg-nba-dark border border-nba-border rounded px-4 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20 placeholder-nba-gray"
         />
-        <button type="submit" className="btn btn-primary" disabled={loading}>
+        <button type="submit" className="font-body font-bold text-[0.8rem] uppercase tracking-[0.8px] py-3.5 px-4 rounded border-none cursor-pointer text-nba-white transition-all bg-nba-red hover:shadow-[0_4px_14px_rgba(200,16,46,0.4)] hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" disabled={loading}>
           {loading ? 'Verificando...' : 'Entrar al Panel VIP'}
         </button>
       </form>
 
-      {error && <p className="error-text">❌ {error}</p>}
+      {error && <p className="text-nba-red font-semibold mt-4">❌ {error}</p>}
     </div>
   );
 };
