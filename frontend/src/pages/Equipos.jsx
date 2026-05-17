@@ -13,6 +13,7 @@ import api from '../services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Equipos = () => {
   const [equipos, setEquipos] = useState([]);
@@ -70,7 +71,27 @@ const Equipos = () => {
         </div>
       </Card>
 
-      {loading && <p className="text-nba-blue font-semibold p-6 text-center">Cargando equipos...</p>}
+      {loading && (
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="bg-nba-card rounded-lg border border-nba-border">
+              <CardHeader className="p-5 pb-0">
+                <div className="flex items-center gap-3 mb-4">
+                  <Skeleton className="w-[50px] h-[50px] rounded-full bg-nba-dark" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-5 w-[150px] bg-nba-dark" />
+                    <Skeleton className="h-3 w-[80px] bg-nba-dark" />
+                  </div>
+                </div>
+                <Skeleton className="h-4 w-[100px] bg-nba-dark mb-5" />
+              </CardHeader>
+              <CardContent className="p-5 pt-0">
+                <Skeleton className="h-[60px] w-full rounded bg-nba-dark" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6">
         {equipos.map((equipo) => (

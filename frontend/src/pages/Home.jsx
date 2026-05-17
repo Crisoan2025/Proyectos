@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Datos estáticos de titulares (se reemplazarán por API en el futuro)
 const TITULARES = [
@@ -156,7 +157,19 @@ const Home = () => {
               <span className="ml-auto text-[0.75rem] font-bold text-nba-gray uppercase tracking-wider">{selectedSeasonName}</span>
             </div>
 
-            {loading && <p className="text-nba-blue font-semibold p-6 text-center">Cargando equipos...</p>}
+            {loading && (
+              <div className="p-6">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center space-x-4 mb-4 last:mb-0">
+                    <Skeleton className="h-6 w-6 bg-nba-dark rounded-full shrink-0" />
+                    <Skeleton className="h-4 w-full max-w-[200px] bg-nba-dark" />
+                    <Skeleton className="h-4 w-8 bg-nba-dark ml-auto" />
+                    <Skeleton className="h-4 w-8 bg-nba-dark" />
+                    <Skeleton className="h-4 w-8 bg-nba-dark" />
+                  </div>
+                ))}
+              </div>
+            )}
             {error && <p className="text-nba-red font-semibold p-6 text-center">❌ Error: {error}</p>}
 
             {!loading && !error && (

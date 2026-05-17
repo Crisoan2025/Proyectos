@@ -12,6 +12,7 @@ import api from '../../../services/api';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 const PlayerForm = ({ equipos, onPlayerCreated }) => {
   const [nombre, setNombre] = useState('');
@@ -35,10 +36,14 @@ const PlayerForm = ({ equipos, onPlayerCreated }) => {
         setCategoria('Senior');
         setEquipoId('');
         onPlayerCreated();
-        alert('¡Jugador fichado con éxito!');
+        toast.success('¡Jugador fichado con éxito!');
+      } else {
+        const data = await res.json();
+        toast.error(`Error: ${data.error || 'Hubo un error'}`);
       }
     } catch (err) {
       console.error(err);
+      toast.error('Error al fichar jugador');
     }
   };
 

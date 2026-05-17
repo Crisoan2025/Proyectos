@@ -12,6 +12,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Jugadores = () => {
   const { players: jugadores, loading, error, reload } = usePlayers();
@@ -63,7 +64,20 @@ const Jugadores = () => {
         </span>
       </div>
 
-      {loading && <p className="text-nba-blue font-semibold p-6 text-center">Cargando jugadores...</p>}
+      {loading && (
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Card key={i} className="flex items-center gap-4 bg-nba-card rounded-lg border-nba-border p-4">
+              <Skeleton className="w-12 h-12 rounded-full bg-nba-dark" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-[120px] bg-nba-dark" />
+                <Skeleton className="h-3 w-[80px] bg-nba-dark" />
+              </div>
+              <Skeleton className="h-4 w-[40px] bg-nba-dark rounded-full" />
+            </Card>
+          ))}
+        </div>
+      )}
       {error && <p className="text-nba-red font-semibold p-6 text-center">❌ Error: {error}</p>}
 
       {!loading && !error && (

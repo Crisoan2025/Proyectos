@@ -10,16 +10,19 @@
 import api from '../../../services/api';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toast } from 'sonner';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const PlayerTable = ({ jugadores, onPlayerDeleted }) => {
 
   const handleBorrar = async (id) => {
-    if (!window.confirm('¿Dar de baja a este jugador?')) return;
     try {
       await api.del(`/jugadores/${id}`);
+      toast.success('Jugador dado de baja exitosamente');
       onPlayerDeleted();
     } catch (err) {
       console.error(err);
+      toast.error('Error al dar de baja al jugador');
     }
   };
 
@@ -42,9 +45,25 @@ const PlayerTable = ({ jugadores, onPlayerDeleted }) => {
               <TableCell className="text-center text-[0.75rem] text-nba-lightgray">{jug.category}</TableCell>
               <TableCell className="text-[0.75rem] text-nba-gray">{jug.team_name || 'Agente Libre'}</TableCell>
               <TableCell className="text-center">
-                <Button onClick={() => handleBorrar(jug.id)} size="sm" className="bg-[#d32f2f] hover:bg-[#b71c1c] text-white font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] h-7 px-3">
-                  BAJA
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" className="bg-[#d32f2f] hover:bg-[#b71c1c] text-white font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] h-7 px-3">
+                      BAJA
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="bg-nba-card border-nba-border text-nba-white">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Dar de baja a este jugador?</AlertDialogTitle>
+                      <AlertDialogDescription className="text-nba-lightgray">
+                        Se eliminará permanentemente de su equipo y del sistema.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="bg-transparent border-nba-border text-nba-white hover:bg-white/5 hover:text-white">Cancelar</AlertDialogCancel>
+                      <AlertDialogAction className="bg-nba-red text-white hover:bg-nba-red/90" onClick={() => handleBorrar(jug.id)}>Confirmar</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </TableCell>
             </TableRow>
           ))}

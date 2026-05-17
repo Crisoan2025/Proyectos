@@ -7,41 +7,59 @@
 // interactuar con cada partido (editar, borrar, cargar score).
 // ============================================================
 
+import { useState } from 'react';
 import api from '../../../services/api';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toast } from 'sonner';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 const MatchTable = ({ partidos, onMatchUpdated, onEditMatch }) => {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [partidoCargando, setPartidoCargando] = useState(null);
+  const [puntosLocal, setPuntosLocal] = useState('');
+  const [puntosVisitante, setPuntosVisitante] = useState('');
 
-  const handleCargarResultado = async (id) => {
-    const puntosLocal = window.prompt('Ingresá los puntos del equipo LOCAL:');
-    const puntosVisitante = window.prompt('Ingresá los puntos del equipo VISITANTE:');
+  const abrirModalCarga = (partido) => {
+    setPartidoCargando(partido);
+    setPuntosLocal('');
+    setPuntosVisitante('');
+    setModalOpen(true);
+  };
+
+  const handleGuardarResultado = async (e) => {
+    e.preventDefault();
     if (!puntosLocal || !puntosVisitante) return;
 
     try {
-      const res = await api.put(`/partidos/${id}/resultado`, {
+      const res = await api.put(`/partidos/${partidoCargando.id}/resultado`, {
         local_points: parseInt(puntosLocal),
         visitor_points: parseInt(puntosVisitante),
       });
       if (res.ok) {
-        alert('¡Resultado guardado!');
+        toast.success('¡Resultado guardado!');
+        setModalOpen(false);
         onMatchUpdated();
       } else {
         const errorData = await res.json();
-        alert(`Error: ${errorData.error || 'Hubo un error'}`);
+        toast.error(`Error: ${errorData.error || 'Hubo un error'}`);
       }
     } catch (err) {
       console.error(err);
+      toast.error('Error al guardar el resultado');
     }
   };
 
   const handleBorrar = async (id) => {
-    if (!window.confirm('¿Seguro que querés cancelar y borrar este partido?')) return;
     try {
       await api.del(`/partidos/${id}`);
+      toast.success('Partido cancelado');
       onMatchUpdated();
     } catch (err) {
       console.error(err);
+      toast.error('Error al borrar partido');
     }
   };
 
@@ -74,7 +92,7 @@ const MatchTable = ({ partidos, onMatchUpdated, onEditMatch }) => {
               </TableCell>
               <TableCell className="text-center">
                 {p.status !== 'jugado' ? (
-                  <Button onClick={() => handleCargarResultado(p.id)} size="sm" className="bg-nba-green hover:bg-nba-green/80 text-white font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] h-7 px-3">
+                  <Button onClick={() => abrirModalCarga(p)} size="sm" className="bg-nba-green hover:bg-nba-green/80 text-white font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] h-7 px-3">
                     Cargar
                   </Button>
                 ) : (
@@ -85,7 +103,23 @@ const MatchTable = ({ partidos, onMatchUpdated, onEditMatch }) => {
                 {p.status !== 'jugado' && (
                   <div className="flex gap-1.5 justify-center">
                     <Button onClick={() => onEditMatch(p)} size="sm" className="bg-nba-gold hover:bg-nba-gold/80 text-black font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] h-7 px-3">✏️</Button>
-                    <Button onClick={() => handleBorrar(p.id)} size="sm" className="bg-[#d32f2f] hover:bg-[#b71c1c] text-white font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] h-7 px-3">🗑️</Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" className="bg-[#d32f2f] hover:bg-[#b71c1c] text-white font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] h-7 px-3">🗑️</Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="bg-nba-card border-nba-border text-nba-white">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>¿Seguro que querés cancelar este partido?</AlertDialogTitle>
+                          <AlertDialogDescription className="text-nba-lightgray">
+                            Esta acción no se puede deshacer y borrará el partido del fixture permanentemente.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="bg-transparent border-nba-border text-nba-white hover:bg-white/5 hover:text-white">Atrás</AlertDialogCancel>
+                          <AlertDialogAction className="bg-nba-red text-white hover:bg-nba-red/90" onClick={() => handleBorrar(p.id)}>Sí, borrar</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 )}
               </TableCell>
@@ -98,6 +132,33 @@ const MatchTable = ({ partidos, onMatchUpdated, onEditMatch }) => {
           )}
         </TableBody>
       </Table>
+
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="bg-nba-card border-nba-border text-nba-white">
+          <DialogHeader>
+            <DialogTitle>Cargar Resultado del Partido</DialogTitle>
+          </DialogHeader>
+          {partidoCargando && (
+            <form onSubmit={handleGuardarResultado} className="flex flex-col gap-4 mt-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <label className="text-[0.7rem] font-bold text-nba-gray uppercase tracking-wider">{partidoCargando.local_name}</label>
+                  <Input type="number" min="0" required value={puntosLocal} onChange={e => setPuntosLocal(e.target.value)} className="bg-nba-dark border-nba-border text-nba-white mt-1 text-center font-bold text-lg" placeholder="Pts Local" />
+                </div>
+                <span className="text-xl font-black mt-5 text-nba-lightgray">VS</span>
+                <div className="flex-1">
+                  <label className="text-[0.7rem] font-bold text-nba-gray uppercase tracking-wider">{partidoCargando.visitor_name}</label>
+                  <Input type="number" min="0" required value={puntosVisitante} onChange={e => setPuntosVisitante(e.target.value)} className="bg-nba-dark border-nba-border text-nba-white mt-1 text-center font-bold text-lg" placeholder="Pts Visitante" />
+                </div>
+              </div>
+              <DialogFooter className="mt-6 flex gap-2">
+                <Button type="button" variant="outline" onClick={() => setModalOpen(false)} className="bg-transparent border-nba-border hover:bg-white/5 text-white flex-1 font-bold uppercase tracking-widest text-[0.8rem]">Cancelar</Button>
+                <Button type="submit" className="bg-nba-green hover:bg-nba-green/90 text-white font-bold uppercase tracking-widest text-[0.8rem] flex-1">Guardar Puntos</Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

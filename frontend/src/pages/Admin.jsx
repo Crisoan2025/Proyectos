@@ -18,6 +18,9 @@ import MatchForm from '../features/matches/components/MatchForm';
 import PlayerForm from '../features/players/components/PlayerForm';
 import PlayerTable from '../features/players/components/PlayerTable';
 import MatchTable from '../features/matches/components/MatchTable';
+import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -66,17 +69,18 @@ const Admin = () => {
       const data = await res.json();
 
       if (res.ok) {
-        alert(data.message);
+        toast.success(data.message);
         setNuevaTemporada('');
         fetchTemporadaActiva();
         // Recargar equipos porque las stats se reiniciaron
         reloadEquipos();
         reloadPartidos();
       } else {
-        alert(`Error: ${data.error}`);
+        toast.error(`Error: ${data.error}`);
       }
     } catch (err) {
       console.error(err);
+      toast.error('Error al crear temporada');
     } finally {
       setCreandoTemporada(false);
     }
@@ -110,9 +114,9 @@ const Admin = () => {
             </span>
           )}
         </div>
-        <button onClick={handleLogout} className="font-body font-bold text-[0.8rem] uppercase tracking-[0.8px] py-2.5 px-4 rounded border-none cursor-pointer text-white transition-all bg-[#d32f2f] hover:-translate-y-px">
+        <Button onClick={handleLogout} className="bg-[#d32f2f] hover:bg-[#b71c1c] text-white font-body font-bold text-[0.8rem] uppercase tracking-[0.8px]">
           🚪 CERRAR SESIÓN
-        </button>
+        </Button>
       </div>
 
       {/* SECCIÓN TEMPORADAS */}
@@ -126,17 +130,17 @@ const Admin = () => {
             </div>
           </div>
           <form onSubmit={handleCrearTemporada} className="flex flex-col gap-2.5 mt-3">
-            <input
+            <Input
               type="text"
               placeholder="Nombre de nueva temporada (ej: Temporada 2027)"
               value={nuevaTemporada}
               onChange={(e) => setNuevaTemporada(e.target.value)}
               required
-              className="bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20 placeholder-nba-gray"
+              className="bg-nba-dark border-nba-border text-nba-white placeholder:text-nba-gray"
             />
-            <button type="submit" className="font-body font-bold text-[0.8rem] uppercase tracking-[0.8px] py-3 px-4 rounded border-none cursor-pointer text-white transition-all bg-nba-green hover:shadow-[0_4px_14px_rgba(0,166,81,0.4)] hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" disabled={creandoTemporada}>
+            <Button type="submit" disabled={creandoTemporada} className="bg-nba-green hover:bg-nba-green/90 text-white font-body font-bold text-[0.8rem] uppercase tracking-[0.8px]">
               {creandoTemporada ? 'CREANDO...' : '🆕 CREAR NUEVA TEMPORADA'}
-            </button>
+            </Button>
           </form>
           <p className="text-[0.75rem] text-nba-gray mt-2">
             ⚠️ Al crear una nueva temporada, las estadísticas se reinician a 0 para todos los equipos.

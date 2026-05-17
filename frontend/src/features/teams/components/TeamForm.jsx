@@ -11,6 +11,7 @@ import api from '../../../services/api';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 const TeamForm = ({ onTeamCreated }) => {
   const [nombreEquipo, setNombreEquipo] = useState('');
@@ -32,10 +33,14 @@ const TeamForm = ({ onTeamCreated }) => {
         setEntrenador('');
         setCategory('Senior');
         onTeamCreated();
-        alert('¡Equipo fichado!');
+        toast.success('¡Equipo fichado!');
+      } else {
+        const data = await res.json();
+        toast.error(`Error: ${data.error || 'Hubo un error'}`);
       }
     } catch (err) {
       console.error(err);
+      toast.error('Error al fichar equipo');
     }
   };
 

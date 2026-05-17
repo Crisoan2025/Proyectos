@@ -13,6 +13,7 @@ import api from '../../../services/api';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
   const [localId, setLocalId] = useState('');
@@ -53,7 +54,7 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (localId === visitanteId) {
-      return alert('Falta técnica: Un equipo no puede jugar contra sí mismo.');
+      return toast.error('Falta técnica: Un equipo no puede jugar contra sí mismo.');
     }
 
     const endpoint = editandoPartidoId
@@ -73,13 +74,14 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
       if (res.ok) {
         limpiarFormulario();
         onMatchSaved();
-        alert(editandoPartidoId ? '¡Partido actualizado!' : '¡Partido programado!');
+        toast.success(editandoPartidoId ? '¡Partido actualizado!' : '¡Partido programado!');
       } else {
         const errorData = await res.json();
-        alert(`Error: ${errorData.error}`);
+        toast.error(`Error: ${errorData.error}`);
       }
     } catch (err) {
       console.error(err);
+      toast.error('Error al guardar partido');
     }
   };
 

@@ -7,6 +7,7 @@ import Equipos from './pages/Equipos';
 import Jugadores from './pages/Jugadores';
 import Login from './features/auth/pages/Login';
 import Admin from './pages/Admin';
+import { Toaster } from '@/components/ui/sonner';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
           </Routes>
         </div>
       </Router>
+      <Toaster theme="dark" richColors closeButton />
     </AuthProvider>
   );
 }
