@@ -8,6 +8,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Datos estáticos de titulares (se reemplazarán por API en el futuro)
 const TITULARES = [
@@ -97,12 +102,12 @@ const Home = () => {
               Seguí la acción en vivo. Standings, fixture y resultados actualizados.
             </p>
             <div className="flex gap-3 flex-wrap">
-              <a href="#standings" className="font-heading text-[0.8rem] font-bold uppercase tracking-[1.5px] py-3.5 px-7 rounded transition-all cursor-pointer border-none bg-nba-red text-nba-white hover:bg-[#e01535] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(200,16,46,0.35)]">
-                VER CLASIFICACIÓN
-              </a>
-              <a href="#standings" className="font-heading text-[0.8rem] font-bold uppercase tracking-[1.5px] py-3.5 px-7 rounded transition-all cursor-pointer bg-transparent text-nba-white border border-white/30 hover:border-white hover:bg-white/5">
-                FIXTURE COMPLETO
-              </a>
+              <Button asChild className="bg-nba-red hover:bg-[#e01535] text-white font-heading font-bold tracking-[1.5px] uppercase py-6 px-7">
+                <a href="#standings">VER CLASIFICACIÓN</a>
+              </Button>
+              <Button asChild variant="outline" className="bg-transparent border-white/30 text-white hover:bg-white/5 hover:border-white font-heading font-bold tracking-[1.5px] uppercase py-6 px-7">
+                <a href="#standings">FIXTURE COMPLETO</a>
+              </Button>
             </div>
           </div>
         </div>
@@ -113,35 +118,40 @@ const Home = () => {
 
         {/* COLUMNA IZQUIERDA — Standings */}
         <main>
-          <div className="bg-nba-card rounded-lg border border-nba-border overflow-hidden" id="standings">
+          <Card className="bg-nba-card rounded-lg border-nba-border overflow-hidden" id="standings">
             <div className="flex justify-between items-baseline pt-5 px-6 pb-4 border-b border-nba-border">
               <h2 className="font-heading text-xl font-black uppercase tracking-wide m-0 text-nba-white">Standings</h2>
               <div className="flex items-center gap-2">
                 {/* Selector de temporada */}
-                <select
-                  className="py-1.5 px-3 text-[0.75rem] bg-nba-dark border border-nba-border rounded text-nba-lightgray cursor-pointer focus:outline-none focus:border-nba-blue focus:ring-2 focus:ring-nba-blue/25"
-                  value={selectedSeason}
-                  onChange={(e) => setSelectedSeason(e.target.value)}
-                >
-                  {temporadas.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name} {t.is_active ? '(Activa)' : ''}
-                    </option>
-                  ))}
-                </select>
+                {selectedSeason && (
+                  <Select value={selectedSeason} onValueChange={setSelectedSeason}>
+                    <SelectTrigger className="w-[180px] bg-nba-dark border-nba-border text-nba-lightgray h-8 text-[0.75rem]">
+                      <SelectValue placeholder="Temporada" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-nba-card border-nba-border text-nba-white">
+                      {temporadas.map((t) => (
+                        <SelectItem key={t.id} value={String(t.id)}>
+                          {t.name} {t.is_active ? '(Activa)' : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </div>
 
             {/* Tabs de categoría */}
             <div className="flex items-center px-6 py-3 border-b border-nba-border gap-2 bg-nba-dark/50">
               {['', 'Senior', 'Junior'].map((cat) => (
-                <button
+                <Button
                   key={cat}
-                  className={`px-4 py-1.5 text-[0.75rem] font-bold uppercase tracking-[0.8px] bg-transparent text-nba-gray border border-nba-border rounded cursor-pointer transition-all hover:text-nba-white hover:border-nba-gray ${categoryFilter === cat ? '!bg-nba-blue !text-nba-white !border-nba-blue' : ''}`}
+                  variant={categoryFilter === cat ? 'default' : 'outline'}
+                  size="sm"
+                  className={`h-7 px-4 text-[0.7rem] font-bold uppercase tracking-[0.8px] cursor-pointer transition-all ${categoryFilter === cat ? 'bg-nba-blue hover:bg-nba-blue/90 text-white border-nba-blue' : 'bg-transparent text-nba-gray border-nba-border hover:text-nba-white hover:border-nba-gray hover:bg-transparent'}`}
                   onClick={() => setCategoryFilter(cat)}
                 >
                   {cat || 'Todos'}
-                </button>
+                </Button>
               ))}
               <span className="ml-auto text-[0.75rem] font-bold text-nba-gray uppercase tracking-wider">{selectedSeasonName}</span>
             </div>
@@ -150,68 +160,70 @@ const Home = () => {
             {error && <p className="text-nba-red font-semibold p-6 text-center">❌ Error: {error}</p>}
 
             {!loading && !error && (
-              <table className="w-full text-center border-collapse">
-                <thead>
-                  <tr className="bg-white/5 border-b border-nba-border">
-                    <th className="text-[0.7rem] font-semibold text-nba-gray uppercase tracking-widest py-3 px-4 w-10">#</th>
-                    <th className="text-[0.7rem] font-semibold text-nba-gray uppercase tracking-widest py-3 px-4 text-left">Equipo</th>
-                    <th className="text-[0.7rem] font-semibold text-nba-gray uppercase tracking-widest py-3 px-4">CAT</th>
-                    <th className="text-[0.7rem] font-semibold text-nba-gray uppercase tracking-widest py-3 px-4">PJ</th>
-                    <th className="text-[0.7rem] font-semibold text-nba-gray uppercase tracking-widest py-3 px-4">W</th>
-                    <th className="text-[0.7rem] font-semibold text-nba-gray uppercase tracking-widest py-3 px-4">L</th>
-                    <th className="text-[0.7rem] font-semibold text-nba-gray uppercase tracking-widest py-3 px-4">E</th>
-                    <th className="text-[0.7rem] font-semibold text-nba-gray uppercase tracking-widest py-3 px-4">DIF</th>
-                    <th className="text-[0.7rem] font-semibold text-nba-gold uppercase tracking-widest py-3 px-4">PTS</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table className="w-full text-center">
+                <TableHeader>
+                  <TableRow className="border-b-nba-border hover:bg-transparent">
+                    <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] w-10 text-center">#</TableHead>
+                    <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-left">Equipo</TableHead>
+                    <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">CAT</TableHead>
+                    <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">PJ</TableHead>
+                    <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">W</TableHead>
+                    <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">L</TableHead>
+                    <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">E</TableHead>
+                    <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">DIF</TableHead>
+                    <TableHead className="text-nba-gold uppercase tracking-widest text-[0.7rem] text-center">PTS</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {equipos.map((equipo, index) => (
-                    <tr key={equipo.id} className="transition-colors hover:bg-white/5 border-b border-nba-border/50">
-                      <td className="py-3.5 px-4 text-nba-gray text-[0.8rem] font-bold">{index + 1}</td>
-                      <td className="py-3.5 px-4 text-left font-bold text-nba-white uppercase text-[0.85rem] flex items-center gap-2.5">
-                        <span className="text-lg">🏀</span>
+                    <TableRow key={equipo.id} className="transition-colors hover:bg-white/5 border-b-nba-border/50 border-t-0">
+                      <TableCell className="text-nba-gray text-[0.8rem] font-bold text-center">{index + 1}</TableCell>
+                      <TableCell className="text-left font-bold text-nba-white uppercase text-[0.85rem]">
+                        <span className="mr-2 text-lg">🏀</span>
                         {equipo.name}
-                      </td>
-                      <td className="py-3.5 px-4 text-[0.9rem] text-nba-lightgray">
-                        <span className={`text-[0.65rem] font-bold uppercase tracking-[0.5px] py-1 px-2 rounded-sm inline-block ${equipo.category === 'Junior' ? 'bg-nba-green/20 text-nba-green' : 'bg-nba-blue/20 text-[#5b8def]'}`}>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="secondary" className={`text-[0.65rem] font-bold uppercase tracking-[0.5px] border-transparent rounded-sm ${equipo.category === 'Junior' ? 'bg-nba-green/20 text-nba-green hover:bg-nba-green/30' : 'bg-nba-blue/20 text-[#5b8def] hover:bg-nba-blue/30'}`}>
                           {equipo.category}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-[0.9rem] text-nba-lightgray">{equipo.played}</td>
-                      <td className="py-3.5 px-4 text-[0.9rem] text-nba-green font-bold">{equipo.won}</td>
-                      <td className="py-3.5 px-4 text-[0.9rem] text-nba-red font-bold">{equipo.lost}</td>
-                      <td className="py-3.5 px-4 text-[0.9rem] text-nba-lightgray">{equipo.tied}</td>
-                      <td className={`py-3.5 px-4 text-[0.9rem] ${equipo.goal_difference > 0 ? 'text-nba-green font-bold' : equipo.goal_difference < 0 ? 'text-nba-red' : 'text-nba-lightgray'}`}>
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center text-[0.9rem] text-nba-lightgray">{equipo.played}</TableCell>
+                      <TableCell className="text-center text-[0.9rem] text-nba-green font-bold">{equipo.won}</TableCell>
+                      <TableCell className="text-center text-[0.9rem] text-nba-red font-bold">{equipo.lost}</TableCell>
+                      <TableCell className="text-center text-[0.9rem] text-nba-lightgray">{equipo.tied}</TableCell>
+                      <TableCell className={`text-center text-[0.9rem] ${equipo.goal_difference > 0 ? 'text-nba-green font-bold' : equipo.goal_difference < 0 ? 'text-nba-red' : 'text-nba-lightgray'}`}>
                         {equipo.goal_difference > 0 ? '+' : ''}{equipo.goal_difference}
-                      </td>
-                      <td className="py-3.5 px-4 font-black text-[1.1rem] text-nba-gold">{equipo.points}</td>
-                    </tr>
+                      </TableCell>
+                      <TableCell className="text-center font-black text-[1.1rem] text-nba-gold">{equipo.points}</TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             )}
 
             {!loading && equipos.length === 0 && (
               <p className="text-center p-6 text-nba-gray">No hay equipos en esta categoría/temporada</p>
             )}
-          </div>
+          </Card>
         </main>
 
         {/* COLUMNA DERECHA — Titulares */}
         <aside>
-          <div className="bg-nba-card rounded-lg border border-nba-border overflow-hidden">
-            <div className="flex justify-between items-center pt-5 px-6 pb-4 border-b border-nba-border">
-              <h3 className="font-heading text-lg font-black tracking-wide m-0 text-nba-white">TITULARES</h3>
+          <Card className="bg-nba-card rounded-lg border-nba-border overflow-hidden">
+            <CardHeader className="flex flex-row justify-between items-center p-5 pb-4 border-b border-nba-border space-y-0">
+              <CardTitle className="font-heading text-lg font-black tracking-wide m-0 text-nba-white">TITULARES</CardTitle>
               <span className="text-[0.75rem] text-nba-blue cursor-pointer hover:text-[#3a6ad4] transition-colors">Ver más</span>
-            </div>
-            <ul className="m-0 p-0 list-none">
-              {TITULARES.map((noticia) => (
-                <li key={noticia.id} className="border-b border-nba-border last:border-none hover:bg-white/5 transition-colors">
-                  <a href="#" className="block py-4 px-6 text-[0.85rem] text-nba-lightgray leading-relaxed hover:text-nba-white transition-colors">{noticia.text}</a>
-                </li>
-              ))}
-            </ul>
-          </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ul className="m-0 p-0 list-none">
+                {TITULARES.map((noticia) => (
+                  <li key={noticia.id} className="border-b border-nba-border last:border-none hover:bg-white/5 transition-colors">
+                    <a href="#" className="block py-4 px-6 text-[0.85rem] text-nba-lightgray leading-relaxed hover:text-nba-white transition-colors">{noticia.text}</a>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
         </aside>
       </div>
     </div>

@@ -8,6 +8,9 @@
 
 import { useState } from 'react';
 import api from '../../../services/api';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const TeamForm = ({ onTeamCreated }) => {
   const [nombreEquipo, setNombreEquipo] = useState('');
@@ -40,28 +43,33 @@ const TeamForm = ({ onTeamCreated }) => {
     <div className="bg-nba-card p-6 rounded-lg border border-nba-border flex-1 min-w-[300px]">
       <h3 className="font-heading text-base font-bold tracking-wide m-0 mb-4 pb-2.5 border-b-2 border-nba-blue text-nba-white block">➕ INSCRIBIR EQUIPO</h3>
       <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
-        <input
+        <Input
           type="text"
           placeholder="Nombre"
           value={nombreEquipo}
           onChange={(e) => setNombreEquipo(e.target.value)}
           required
-          className="bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20 placeholder-nba-gray"
+          className="bg-nba-dark border-nba-border text-nba-white placeholder:text-nba-gray"
         />
-        <input
+        <Input
           type="text"
           placeholder="DT"
           value={entrenador}
           onChange={(e) => setEntrenador(e.target.value)}
-          className="bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20 placeholder-nba-gray"
+          className="bg-nba-dark border-nba-border text-nba-white placeholder:text-nba-gray"
         />
-        <select value={category} onChange={(e) => setCategory(e.target.value)} className="bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20">
-          <option value="Senior">🏅 Senior</option>
-          <option value="Junior">🌱 Junior</option>
-        </select>
-        <button type="submit" className="font-body font-bold text-[0.8rem] uppercase tracking-[0.8px] py-3 px-4 rounded border-none cursor-pointer text-white transition-all bg-nba-red hover:shadow-[0_4px_14px_rgba(200,16,46,0.4)] hover:-translate-y-px mt-2">
+        <Select value={category} onValueChange={setCategory}>
+          <SelectTrigger className="bg-nba-dark border-nba-border text-nba-white">
+            <SelectValue placeholder="Seleccionar Categoría" />
+          </SelectTrigger>
+          <SelectContent className="bg-nba-card border-nba-border text-nba-white">
+            <SelectItem value="Senior">🏅 Senior</SelectItem>
+            <SelectItem value="Junior">🌱 Junior</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button type="submit" className="w-full bg-nba-red hover:bg-nba-red/90 text-white font-body font-bold tracking-widest mt-2">
           GUARDAR EQUIPO
-        </button>
+        </Button>
       </form>
     </div>
   );

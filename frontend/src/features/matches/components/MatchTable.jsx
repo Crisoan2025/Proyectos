@@ -8,6 +8,8 @@
 // ============================================================
 
 import api from '../../../services/api';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const MatchTable = ({ partidos, onMatchUpdated, onEditMatch }) => {
 
@@ -46,56 +48,56 @@ const MatchTable = ({ partidos, onMatchUpdated, onEditMatch }) => {
   return (
     <div className="bg-nba-card p-6 rounded-lg border border-nba-border flex-1 min-w-[500px] overflow-x-auto">
       <h3 className="font-heading text-base font-bold tracking-wide m-0 mb-4 pb-2.5 border-b-2 border-nba-blue text-nba-white block">🏆 FIXTURE Y RESULTADOS</h3>
-      <table className="w-full border-collapse bg-transparent mt-3">
-        <thead>
-          <tr className="bg-white/5 border-b border-nba-border">
-            <th className="text-[0.7rem] font-semibold text-nba-gray uppercase tracking-widest p-3">Cuándo / Dónde</th>
-            <th className="text-[0.7rem] font-semibold text-nba-gray uppercase tracking-widest p-3">Encuentro</th>
-            <th className="text-[0.7rem] font-semibold text-nba-gray uppercase tracking-widest p-3">Score</th>
-            <th className="text-[0.7rem] font-semibold text-nba-gray uppercase tracking-widest p-3">Opciones</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table className="mt-3">
+        <TableHeader>
+          <TableRow className="border-nba-border hover:bg-transparent">
+            <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">Cuándo / Dónde</TableHead>
+            <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">Encuentro</TableHead>
+            <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">Score</TableHead>
+            <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">Opciones</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {partidos.map((p) => (
-            <tr key={p.id} className="transition-colors hover:bg-white/5">
-              <td className="p-3 border-b border-nba-border/50 text-[0.75rem] text-nba-gray text-center">
+            <TableRow key={p.id} className="border-nba-border/50 hover:bg-white/5 transition-colors">
+              <TableCell className="text-[0.75rem] text-nba-gray text-center">
                 <strong className="text-nba-lightgray">{new Date(p.match_date).toLocaleDateString()} - {p.match_time || '20:00'}</strong>
                 <br />
                 📍 {p.location || 'Estadio Central'}
-              </td>
-              <td className="p-3 border-b border-nba-border/50 text-center">
+              </TableCell>
+              <TableCell className="text-center">
                 <div className="font-bold text-[0.85rem] text-nba-white">{p.local_name}</div>
                 <div className={`font-black my-1 text-[1.1rem] ${p.status === 'jugado' ? 'text-nba-red' : 'text-nba-gray'}`}>
                   {p.status === 'jugado' ? `${p.local_points} - ${p.visitor_points}` : 'VS'}
                 </div>
                 <div className="font-bold text-[0.85rem] text-nba-white">{p.visitor_name}</div>
-              </td>
-              <td className="p-3 border-b border-nba-border/50 text-center">
+              </TableCell>
+              <TableCell className="text-center">
                 {p.status !== 'jugado' ? (
-                  <button onClick={() => handleCargarResultado(p.id)} className="font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] py-1.5 px-3 rounded border-none cursor-pointer text-white transition-all bg-nba-green hover:-translate-y-px">
+                  <Button onClick={() => handleCargarResultado(p.id)} size="sm" className="bg-nba-green hover:bg-nba-green/80 text-white font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] h-7 px-3">
                     Cargar
-                  </button>
+                  </Button>
                 ) : (
                   <span className="text-nba-green font-bold text-[0.7rem] uppercase tracking-[1px]">FINAL</span>
                 )}
-              </td>
-              <td className="p-3 border-b border-nba-border/50 text-center">
+              </TableCell>
+              <TableCell className="text-center">
                 {p.status !== 'jugado' && (
                   <div className="flex gap-1.5 justify-center">
-                    <button onClick={() => onEditMatch(p)} className="font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] py-1.5 px-3 rounded border-none cursor-pointer text-black transition-all bg-nba-gold hover:-translate-y-px">✏️</button>
-                    <button onClick={() => handleBorrar(p.id)} className="font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] py-1.5 px-3 rounded border-none cursor-pointer text-white transition-all bg-[#d32f2f] hover:-translate-y-px">🗑️</button>
+                    <Button onClick={() => onEditMatch(p)} size="sm" className="bg-nba-gold hover:bg-nba-gold/80 text-black font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] h-7 px-3">✏️</Button>
+                    <Button onClick={() => handleBorrar(p.id)} size="sm" className="bg-[#d32f2f] hover:bg-[#b71c1c] text-white font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] h-7 px-3">🗑️</Button>
                   </div>
                 )}
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
           {partidos.length === 0 && (
-            <tr>
-              <td colSpan="4" className="text-center p-6 text-nba-gray border-b border-nba-border/50">No hay partidos programados.</td>
-            </tr>
+            <TableRow className="border-nba-border/50 hover:bg-transparent">
+              <TableCell colSpan={4} className="text-center p-6 text-nba-gray">No hay partidos programados.</TableCell>
+            </TableRow>
           )}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 };

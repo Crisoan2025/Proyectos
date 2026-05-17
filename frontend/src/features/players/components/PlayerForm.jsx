@@ -9,6 +9,9 @@
 
 import { useState } from 'react';
 import api from '../../../services/api';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const PlayerForm = ({ equipos, onPlayerCreated }) => {
   const [nombre, setNombre] = useState('');
@@ -44,22 +47,31 @@ const PlayerForm = ({ equipos, onPlayerCreated }) => {
       <h3 className="font-heading text-base font-bold tracking-wide m-0 mb-4 pb-2.5 border-b-2 border-nba-green text-nba-white block">🏃‍♂️ FICHAR JUGADOR</h3>
       <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
         <div className="flex gap-2.5">
-          <input type="text" placeholder="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} required className="flex-1 bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20 placeholder-nba-gray" />
-          <input type="text" placeholder="Apellido" value={apellido} onChange={(e) => setApellido(e.target.value)} required className="flex-1 bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20 placeholder-nba-gray" />
+          <Input type="text" placeholder="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} required className="flex-1 bg-nba-dark border-nba-border text-nba-white placeholder:text-nba-gray" />
+          <Input type="text" placeholder="Apellido" value={apellido} onChange={(e) => setApellido(e.target.value)} required className="flex-1 bg-nba-dark border-nba-border text-nba-white placeholder:text-nba-gray" />
         </div>
-        <select value={categoria} onChange={(e) => setCategoria(e.target.value)} className="bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20">
-          <option value="Senior">Senior</option>
-          <option value="Junior">Junior</option>
-        </select>
-        <select value={equipoId} onChange={(e) => setEquipoId(e.target.value)} required className="bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20">
-          <option value="">¿A qué equipo va?</option>
-          {equipos.map((eq) => (
-            <option key={eq.id} value={eq.id}>{eq.name}</option>
-          ))}
-        </select>
-        <button type="submit" className="font-body font-bold text-[0.8rem] uppercase tracking-[0.8px] py-3 px-4 rounded border-none cursor-pointer text-white transition-all bg-nba-green hover:shadow-[0_4px_14px_rgba(0,166,81,0.4)] hover:-translate-y-px mt-2">
+        <Select value={categoria} onValueChange={setCategoria}>
+          <SelectTrigger className="bg-nba-dark border-nba-border text-nba-white">
+            <SelectValue placeholder="Seleccionar Categoría" />
+          </SelectTrigger>
+          <SelectContent className="bg-nba-card border-nba-border text-nba-white">
+            <SelectItem value="Senior">Senior</SelectItem>
+            <SelectItem value="Junior">Junior</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={equipoId} onValueChange={setEquipoId} required>
+          <SelectTrigger className="bg-nba-dark border-nba-border text-nba-white">
+            <SelectValue placeholder="¿A qué equipo va?" />
+          </SelectTrigger>
+          <SelectContent className="bg-nba-card border-nba-border text-nba-white">
+            {equipos.map((eq) => (
+              <SelectItem key={eq.id} value={eq.id.toString()}>{eq.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button type="submit" className="w-full bg-nba-green hover:bg-nba-green/90 text-white font-body font-bold uppercase tracking-[0.8px] mt-2">
           FICHAR
-        </button>
+        </Button>
       </form>
     </div>
   );

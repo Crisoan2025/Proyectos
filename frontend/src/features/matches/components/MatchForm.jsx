@@ -10,6 +10,9 @@
 
 import { useState, forwardRef, useImperativeHandle } from 'react';
 import api from '../../../services/api';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
   const [localId, setLocalId] = useState('');
@@ -19,23 +22,20 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
   const [lugar, setLugar] = useState('');
   const [editandoPartidoId, setEditandoPartidoId] = useState(null);
 
-  // Exponer iniciarEdicion al componente padre via ref
   useImperativeHandle(ref, () => ({
     iniciarEdicion(partido) {
       setEditandoPartidoId(partido.id);
-      setLocalId(partido.local_team_id);
-      setVisitanteId(partido.visitor_team_id);
+      setLocalId(partido.local_team_id?.toString());
+      setVisitanteId(partido.visitor_team_id?.toString());
       setFecha(partido.match_date.split('T')[0]);
       setHora(partido.match_time || '20:00');
       setLugar(partido.location || '');
     },
   }));
 
-  // Autocompletar estadio al seleccionar equipo local
-  const handleLocalChange = (e) => {
-    const id = e.target.value;
-    setLocalId(id);
-    const equipo = equipos.find((eq) => eq.id === Number(id));
+  const handleLocalChange = (value) => {
+    setLocalId(value);
+    const equipo = equipos.find((eq) => eq.id === Number(value));
     if (equipo && equipo.stadium) {
       setLugar(equipo.stadium);
     }
@@ -89,33 +89,42 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
         {editandoPartidoId ? '✏️ EDITAR PARTIDO' : '📅 PROGRAMAR PARTIDO'}
       </h3>
       <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
-        <select value={localId} onChange={handleLocalChange} required className="bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20">
-          <option value="">Seleccionar Local...</option>
-          {equipos.map((eq) => (
-            <option key={eq.id} value={eq.id}>{eq.name}</option>
-          ))}
-        </select>
-        <select value={visitanteId} onChange={(e) => setVisitanteId(e.target.value)} required className="bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20">
-          <option value="">Seleccionar Visitante...</option>
-          {equipos.map((eq) => (
-            <option key={eq.id} value={eq.id}>{eq.name}</option>
-          ))}
-        </select>
+        <Select value={localId} onValueChange={handleLocalChange} required>
+          <SelectTrigger className="bg-nba-dark border-nba-border text-nba-white">
+            <SelectValue placeholder="Seleccionar Local..." />
+          </SelectTrigger>
+          <SelectContent className="bg-nba-card border-nba-border text-nba-white">
+            {equipos.map((eq) => (
+              <SelectItem key={eq.id} value={eq.id.toString()}>{eq.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={visitanteId} onValueChange={setVisitanteId} required>
+          <SelectTrigger className="bg-nba-dark border-nba-border text-nba-white">
+            <SelectValue placeholder="Seleccionar Visitante..." />
+          </SelectTrigger>
+          <SelectContent className="bg-nba-card border-nba-border text-nba-white">
+            {equipos.map((eq) => (
+              <SelectItem key={eq.id} value={eq.id.toString()}>{eq.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         <div className="flex gap-2.5">
-          <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required className="flex-2 bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20" />
-          <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} required className="flex-1 bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20" />
+          <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required className="flex-2 bg-nba-dark border-nba-border text-nba-white" />
+          <Input type="time" value={hora} onChange={(e) => setHora(e.target.value)} required className="flex-1 bg-nba-dark border-nba-border text-nba-white" />
         </div>
 
-        <input type="text" placeholder="Estadio / Lugar" value={lugar} onChange={(e) => setLugar(e.target.value)} required className="bg-nba-dark border border-nba-border rounded px-3 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20 placeholder-nba-gray" />
+        <Input type="text" placeholder="Estadio / Lugar" value={lugar} onChange={(e) => setLugar(e.target.value)} required className="bg-nba-dark border-nba-border text-nba-white placeholder-nba-gray" />
 
-        <button type="submit" className={`font-body font-bold text-[0.8rem] uppercase tracking-[0.8px] py-3 px-4 rounded border-none cursor-pointer text-white transition-all hover:-translate-y-px mt-2 ${editandoPartidoId ? 'bg-[#d32f2f]' : 'bg-nba-blue hover:shadow-[0_4px_14px_rgba(29,66,138,0.4)]'}`}>
+        <Button type="submit" className={`w-full font-body font-bold uppercase tracking-[0.8px] text-white mt-2 ${editandoPartidoId ? 'bg-nba-red hover:bg-nba-red/90' : 'bg-nba-blue hover:bg-nba-blue/90'}`}>
           {editandoPartidoId ? 'ACTUALIZAR PARTIDO' : 'PROGRAMAR'}
-        </button>
+        </Button>
         {editandoPartidoId && (
-          <button type="button" onClick={limpiarFormulario} className="font-body font-bold text-[0.8rem] uppercase tracking-[0.8px] p-2 rounded border-none cursor-pointer text-white transition-all hover:-translate-y-px mt-1 bg-[#444]">
+          <Button type="button" onClick={limpiarFormulario} variant="secondary" className="w-full font-body font-bold uppercase tracking-[0.8px] mt-1">
             CANCELAR EDICIÓN
-          </button>
+          </Button>
         )}
       </form>
     </div>

@@ -8,6 +8,10 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { usePlayers } from '../features/players/api/usePlayers';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const Jugadores = () => {
   const { players: jugadores, loading, error, reload } = usePlayers();
@@ -29,29 +33,30 @@ const Jugadores = () => {
 
   return (
     <div className="max-w-7xl mx-auto py-10 px-6">
-      <div className="flex flex-col sm:flex-row justify-between items-center bg-nba-card py-5 px-6 rounded-lg border border-nba-border mb-8 shadow-sm">
+      <Card className="flex flex-col sm:flex-row justify-between items-center bg-nba-card py-5 px-6 rounded-lg border-nba-border mb-8 shadow-sm">
         <h2 className="font-heading text-2xl font-black uppercase tracking-wide text-nba-white m-0 mb-4 sm:mb-0">🏃‍♂️ Jugadores de la Liga</h2>
         <div className="flex gap-2">
           {['', 'Senior', 'Junior'].map((cat) => (
-            <button
+            <Button
               key={cat}
-              className={`px-4 py-1.5 text-[0.75rem] font-bold uppercase tracking-[0.8px] bg-transparent text-nba-gray border border-nba-border rounded cursor-pointer transition-all hover:text-nba-white hover:border-nba-gray ${categoryFilter === cat ? '!bg-nba-blue !text-nba-white !border-nba-blue' : ''}`}
+              variant={categoryFilter === cat ? 'default' : 'outline'}
+              className={`px-4 py-1.5 text-[0.75rem] font-bold uppercase tracking-[0.8px] cursor-pointer transition-all ${categoryFilter === cat ? 'bg-nba-blue hover:bg-nba-blue/90 text-white border-nba-blue' : 'bg-transparent text-nba-gray border-nba-border hover:text-nba-white hover:border-nba-gray hover:bg-transparent'}`}
               onClick={() => setCategoryFilter(cat)}
             >
               {cat || 'Todos'}
-            </button>
+            </Button>
           ))}
         </div>
-      </div>
+      </Card>
 
       {/* Barra de búsqueda */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8 bg-nba-dark p-4 rounded-lg border border-nba-border">
-        <input
+        <Input
           type="text"
           placeholder="🔍 Buscar jugador por nombre o apellido..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full max-w-md bg-nba-card border border-nba-border rounded px-4 py-2.5 text-[0.9rem] text-nba-white focus:outline-none focus:border-nba-blue focus:ring-2 focus:ring-nba-blue/25 placeholder-nba-gray transition-all"
+          className="w-full max-w-md bg-nba-card border-nba-border text-nba-white placeholder:text-nba-gray"
         />
         <span className="text-[0.8rem] font-bold uppercase tracking-wider text-nba-gray">
           {jugadoresFiltrados.length} jugador{jugadoresFiltrados.length !== 1 ? 'es' : ''}
@@ -64,7 +69,7 @@ const Jugadores = () => {
       {!loading && !error && (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
           {jugadoresFiltrados.map((j) => (
-            <div key={j.id} className="flex items-center gap-4 bg-nba-card rounded-lg border border-nba-border p-4 transition-transform hover:-translate-y-1 hover:shadow-md cursor-default">
+            <Card key={j.id} className="flex items-center gap-4 bg-nba-card rounded-lg border-nba-border p-4 transition-transform hover:-translate-y-1 hover:shadow-md cursor-default">
               <div className="w-12 h-12 bg-gradient-to-br from-nba-blue to-nba-dark rounded-full flex items-center justify-center font-heading font-black text-nba-white tracking-widest shrink-0 shadow-inner">
                 {j.surname?.charAt(0)}{j.name?.charAt(0)}
               </div>
@@ -74,10 +79,10 @@ const Jugadores = () => {
                   {j.team_name || 'Agente Libre'}
                 </span>
               </div>
-              <span className={`text-[0.65rem] font-bold uppercase tracking-[0.5px] py-1 px-2 rounded-sm inline-block ${j.category === 'Junior' ? 'bg-nba-green/20 text-nba-green' : 'bg-nba-blue/20 text-[#5b8def]'}`}>
+              <Badge variant="secondary" className={`text-[0.65rem] font-bold uppercase tracking-[0.5px] py-0.5 px-2 border-transparent ${j.category === 'Junior' ? 'bg-nba-green/20 text-nba-green hover:bg-nba-green/30' : 'bg-nba-blue/20 text-[#5b8def] hover:bg-nba-blue/30'}`}>
                 {j.category || 'N/A'}
-              </span>
-            </div>
+              </Badge>
+            </Card>
           ))}
         </div>
       )}

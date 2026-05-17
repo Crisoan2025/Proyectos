@@ -11,6 +11,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../../../services/api';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -49,29 +51,29 @@ const Login = () => {
       <h2 className="font-heading text-3xl font-black uppercase tracking-wide text-nba-white mb-2">🔑 Acceso Restringido</h2>
       <p className="text-nba-gray text-[0.9rem] mb-6">Ingresá tus credenciales de Administrador</p>
       
-      <form onSubmit={handleLogin} className="flex flex-col gap-4">
-        <input 
+      <form onSubmit={handleLogin} className="flex flex-col gap-4 text-left">
+        <Input 
           type="email" 
           placeholder="Tu correo (ej: admin@tpo.com)" 
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="bg-nba-dark border border-nba-border rounded px-4 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20 placeholder-nba-gray"
+          className="bg-nba-dark border-nba-border text-nba-white placeholder:text-nba-gray"
         />
-        <input 
+        <Input 
           type="password" 
           placeholder="Tu contraseña secreta" 
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="bg-nba-dark border border-nba-border rounded px-4 py-3 text-[0.9rem] text-nba-white font-body transition-all focus:outline-none focus:border-nba-blue focus:ring-4 focus:ring-nba-blue/20 placeholder-nba-gray"
+          className="bg-nba-dark border-nba-border text-nba-white placeholder:text-nba-gray"
         />
-        <button type="submit" className="font-body font-bold text-[0.8rem] uppercase tracking-[0.8px] py-3.5 px-4 rounded border-none cursor-pointer text-nba-white transition-all bg-nba-red hover:shadow-[0_4px_14px_rgba(200,16,46,0.4)] hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" disabled={loading}>
-          {loading ? 'Verificando...' : 'Entrar al Panel VIP'}
-        </button>
+        <Button type="submit" className="w-full bg-nba-red hover:bg-nba-red/90 text-white font-body font-bold tracking-widest mt-2" disabled={loading}>
+          {loading ? 'Verificando...' : 'ENTRAR AL PANEL VIP'}
+        </Button>
       </form>
 
-      {error && <p className="text-nba-red font-semibold mt-4">❌ {error}</p>}
+      {error && <p className="text-nba-red font-semibold mt-4 text-sm">❌ {error}</p>}
     </div>
   );
 };
