@@ -14,6 +14,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { format, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { CalendarIcon } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
   const [localId, setLocalId] = useState('');
@@ -55,6 +60,9 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
     e.preventDefault();
     if (localId === visitanteId) {
       return toast.error('Falta técnica: Un equipo no puede jugar contra sí mismo.');
+    }
+    if (!fecha) {
+      return toast.error('Por favor selecciona una fecha para el partido.');
     }
 
     const endpoint = editandoPartidoId
@@ -113,9 +121,40 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
           </SelectContent>
         </Select>
 
-        <div className="flex gap-2.5">
-          <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required className="flex-2 bg-nba-dark border-nba-border text-nba-white" />
-          <Input type="time" value={hora} onChange={(e) => setHora(e.target.value)} required className="flex-1 bg-nba-dark border-nba-border text-nba-white" />
+        <div className="flex gap-2.5 flex-col sm:flex-row">
+          <div className="flex-2 w-full">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant={"outline"}
+                  className={`w-full justify-start text-left font-normal bg-nba-dark border-nba-border hover:bg-nba-dark/80 hover:text-white ${!fecha ? "text-nba-gray" : "text-nba-white"}`}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4 text-nba-blue" />
+                  {fecha ? format(parseISO(fecha), "PPP", { locale: es }) : <span>Elegir fecha...</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-nba-card border-nba-border text-nba-white" align="start">
+                <Calendar
+                  mode="single"
+                  selected={fecha ? parseISO(fecha) : undefined}
+                  onSelect={(date) => {
+                    if (date) {
+                      // Usar offset para no tener problemas de UTC
+                      const offset = date.getTimezoneOffset();
+                      const adjustedDate = new Date(date.getTime() - (offset * 60 * 1000));
+                      setFecha(adjustedDate.toISOString().split('T')[0]);
+                    } else {
+                      setFecha('');
+                    }
+                  }}
+                  initialFocus
+                  captionLayout="dropdown"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <Input type="time" value={hora} onChange={(e) => setHora(e.target.value)} required className="flex-1 w-full bg-nba-dark border-nba-border text-nba-white" />
         </div>
 
         <Input type="text" placeholder="Estadio / Lugar" value={lugar} onChange={(e) => setLugar(e.target.value)} required className="bg-nba-dark border-nba-border text-nba-white placeholder-nba-gray" />
@@ -124,7 +163,7 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
           {editandoPartidoId ? 'ACTUALIZAR PARTIDO' : 'PROGRAMAR'}
         </Button>
         {editandoPartidoId && (
-          <Button type="button" onClick={limpiarFormulario} variant="secondary" className="w-full font-body font-bold uppercase tracking-[0.8px] mt-1">
+          <Button type="button" onClick={limpiarFormulario} variant="secondary" className="w-full font-body font-bold uppercase tracking-[0.8px] mt-1 bg-transparent border-nba-border text-nba-white hover:bg-white/5">
             CANCELAR EDICIÓN
           </Button>
         )}

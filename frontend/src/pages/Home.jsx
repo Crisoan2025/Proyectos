@@ -14,6 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import PlayoffBracket from '../components/PlayoffBracket';
 
 // Datos estáticos de titulares (se reemplazarán por API en el futuro)
 const TITULARES = [
@@ -179,11 +181,46 @@ const Home = () => {
                     <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] w-10 text-center">#</TableHead>
                     <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-left">Equipo</TableHead>
                     <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">CAT</TableHead>
-                    <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">PJ</TableHead>
-                    <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">W</TableHead>
-                    <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">L</TableHead>
-                    <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">E</TableHead>
-                    <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">DIF</TableHead>
+                    <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">
+                      <Tooltip>
+                        <TooltipTrigger className="cursor-help border-b border-dotted border-nba-gray/50 pb-0.5">PJ</TooltipTrigger>
+                        <TooltipContent className="bg-nba-card border-nba-border text-nba-white text-[0.7rem] font-bold">
+                          Partidos Jugados
+                        </TooltipContent>
+                      </Tooltip>
+                    </TableHead>
+                    <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">
+                      <Tooltip>
+                        <TooltipTrigger className="cursor-help border-b border-dotted border-nba-gray/50 pb-0.5 text-nba-green">W</TooltipTrigger>
+                        <TooltipContent className="bg-nba-card border-nba-border text-nba-white text-[0.7rem] font-bold">
+                          Victorias (Won)
+                        </TooltipContent>
+                      </Tooltip>
+                    </TableHead>
+                    <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">
+                      <Tooltip>
+                        <TooltipTrigger className="cursor-help border-b border-dotted border-nba-gray/50 pb-0.5 text-nba-red">L</TooltipTrigger>
+                        <TooltipContent className="bg-nba-card border-nba-border text-nba-white text-[0.7rem] font-bold">
+                          Derrotas (Lost)
+                        </TooltipContent>
+                      </Tooltip>
+                    </TableHead>
+                    <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">
+                      <Tooltip>
+                        <TooltipTrigger className="cursor-help border-b border-dotted border-nba-gray/50 pb-0.5">E</TooltipTrigger>
+                        <TooltipContent className="bg-nba-card border-nba-border text-nba-white text-[0.7rem] font-bold">
+                          Empates
+                        </TooltipContent>
+                      </Tooltip>
+                    </TableHead>
+                    <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem] text-center">
+                      <Tooltip>
+                        <TooltipTrigger className="cursor-help border-b border-dotted border-nba-gray/50 pb-0.5">DIF</TooltipTrigger>
+                        <TooltipContent className="bg-nba-card border-nba-border text-nba-white text-[0.7rem] font-bold">
+                          Diferencia de Puntos
+                        </TooltipContent>
+                      </Tooltip>
+                    </TableHead>
                     <TableHead className="text-nba-gold uppercase tracking-widest text-[0.7rem] text-center">PTS</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -239,6 +276,13 @@ const Home = () => {
           </Card>
         </aside>
       </div>
+
+      {/* ============ BRACKET DE PLAYOFFS (ancho completo) ============ */}
+      {!loading && !error && equipos.length >= 8 && (
+        <div className="max-w-7xl mx-auto px-6 pb-8">
+          <PlayoffBracket equipos={equipos} />
+        </div>
+      )}
     </div>
   );
 };
