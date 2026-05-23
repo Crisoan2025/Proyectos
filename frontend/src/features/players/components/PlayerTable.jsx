@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Users } from 'lucide-react';
 
 const PlayerTable = ({ jugadores, onPlayerDeleted }) => {
 
@@ -28,7 +29,10 @@ const PlayerTable = ({ jugadores, onPlayerDeleted }) => {
 
   return (
     <div className="bg-nba-card p-6 rounded-lg border border-nba-border flex-1 min-w-[400px] overflow-x-auto">
-      <h3 className="font-heading text-base font-bold tracking-wide m-0 mb-4 pb-2.5 border-b-2 border-nba-green text-nba-white block">📋 ROSTER</h3>
+      <div className="flex items-center gap-2 mb-4 pb-2.5 border-b-2 border-nba-green">
+        <Users className="w-5 h-5 text-nba-green" />
+        <h3 className="font-heading text-base font-bold tracking-wide m-0 text-nba-white block">ROSTER</h3>
+      </div>
       <Table className="mt-3">
         <TableHeader>
           <TableRow className="border-nba-border hover:bg-transparent">

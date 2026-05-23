@@ -1,11 +1,3 @@
-// ============================================================
-// Home.jsx — Página principal estilo NBA
-// ============================================================
-// Layout de 2 columnas:
-// - Izquierda (70%): Hero banner + Selector de temporada/categoría + Standings
-// - Derecha (30%): Sidebar de "Titulares"
-// ============================================================
-
 import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import PlayoffBracket from '../components/PlayoffBracket';
+import { Trophy } from 'lucide-react';
 
 // Datos estáticos de titulares (se reemplazarán por API en el futuro)
 const TITULARES = [
@@ -94,8 +87,9 @@ const Home = () => {
       <section className="relative overflow-hidden bg-gradient-to-br from-[#0a1628] via-[#1a0a2e] to-[#2a0a1e] before:absolute before:-top-1/2 before:-right-[20%] before:w-[600px] before:h-[600px] before:bg-[radial-gradient(circle,rgba(200,16,46,0.15)_0%,transparent_70%)] before:pointer-events-none after:absolute after:-bottom-[30%] after:-left-[10%] after:w-[500px] after:h-[500px] after:bg-[radial-gradient(circle,rgba(29,66,138,0.12)_0%,transparent_70%)] after:pointer-events-none">
         <div className="relative z-10 py-16 px-10 max-w-7xl mx-auto">
           <div className="max-w-[600px]">
-            <span className="inline-block text-[0.7rem] font-bold uppercase tracking-[2px] text-nba-gold bg-nba-gold/10 border border-nba-gold/30 py-1.5 px-3.5 rounded mb-5">
-              🏆 {temporadaActiva?.name || 'Liga de Baloncesto'}
+            <span className="inline-flex items-center gap-2 text-[0.7rem] font-bold uppercase tracking-[2px] text-nba-gold bg-nba-gold/10 border border-nba-gold/30 py-1.5 px-3.5 rounded mb-5">
+              <Trophy className="w-4 h-4" />
+              {temporadaActiva?.name || 'Liga de Baloncesto'}
             </span>
             <h2 className="font-heading text-5xl font-black leading-tight uppercase tracking-tight text-nba-white mb-4">
               LIGA DE BALONCESTO<br />
@@ -229,7 +223,6 @@ const Home = () => {
                     <TableRow key={equipo.id} className="transition-colors hover:bg-white/5 border-b-nba-border/50 border-t-0">
                       <TableCell className="text-nba-gray text-[0.8rem] font-bold text-center">{index + 1}</TableCell>
                       <TableCell className="text-left font-bold text-nba-white uppercase text-[0.85rem]">
-                        <span className="mr-2 text-lg">🏀</span>
                         {equipo.name}
                       </TableCell>
                       <TableCell className="text-center">

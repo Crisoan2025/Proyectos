@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Edit2, CalendarPlus } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -82,7 +82,7 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
       if (res.ok) {
         limpiarFormulario();
         onMatchSaved();
-        toast.success(editandoPartidoId ? '¡Partido actualizado!' : '¡Partido programado!');
+        toast.success(editandoPartidoId ? 'Partido actualizado' : 'Partido programado');
       } else {
         const errorData = await res.json();
         toast.error(`Error: ${errorData.error}`);
@@ -95,9 +95,12 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
 
   return (
     <div className={`bg-nba-card p-6 rounded-lg flex-1 min-w-[300px] border ${editandoPartidoId ? 'border-nba-red' : 'border-nba-border'}`}>
-      <h3 className={`font-heading text-base font-bold tracking-wide m-0 mb-4 pb-2.5 border-b-2 block text-nba-white ${editandoPartidoId ? 'border-nba-red' : 'border-nba-blue'}`}>
-        {editandoPartidoId ? '✏️ EDITAR PARTIDO' : '📅 PROGRAMAR PARTIDO'}
-      </h3>
+      <div className={`flex items-center gap-2 mb-4 pb-2.5 border-b-2 ${editandoPartidoId ? 'border-nba-red text-nba-red' : 'border-nba-blue text-nba-blue'}`}>
+        {editandoPartidoId ? <Edit2 className="w-5 h-5" /> : <CalendarPlus className="w-5 h-5" />}
+        <h3 className="font-heading text-base font-bold tracking-wide m-0 text-nba-white">
+          {editandoPartidoId ? 'EDITAR PARTIDO' : 'PROGRAMAR PARTIDO'}
+        </h3>
+      </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
         <Select value={localId} onValueChange={handleLocalChange} required>
           <SelectTrigger className="bg-nba-dark border-nba-border text-nba-white">
@@ -159,7 +162,8 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
 
         <Input type="text" placeholder="Estadio / Lugar" value={lugar} onChange={(e) => setLugar(e.target.value)} required className="bg-nba-dark border-nba-border text-nba-white placeholder-nba-gray" />
 
-        <Button type="submit" className={`w-full font-body font-bold uppercase tracking-[0.8px] text-white mt-2 ${editandoPartidoId ? 'bg-nba-red hover:bg-nba-red/90' : 'bg-nba-blue hover:bg-nba-blue/90'}`}>
+        <Button type="submit" className={`w-full font-body font-bold uppercase tracking-[0.8px] text-white mt-2 flex items-center justify-center gap-2 ${editandoPartidoId ? 'bg-nba-red hover:bg-nba-red/90' : 'bg-nba-blue hover:bg-nba-blue/90'}`}>
+          {editandoPartidoId ? <Edit2 className="w-4 h-4" /> : <CalendarPlus className="w-4 h-4" />}
           {editandoPartidoId ? 'ACTUALIZAR PARTIDO' : 'PROGRAMAR'}
         </Button>
         {editandoPartidoId && (

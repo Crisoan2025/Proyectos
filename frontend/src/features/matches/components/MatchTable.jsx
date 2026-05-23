@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Trophy, Edit2, Trash2 } from 'lucide-react';
 
 const MatchTable = ({ partidos, onMatchUpdated, onEditMatch }) => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -39,7 +40,7 @@ const MatchTable = ({ partidos, onMatchUpdated, onEditMatch }) => {
         visitor_points: parseInt(puntosVisitante),
       });
       if (res.ok) {
-        toast.success('¡Resultado guardado!');
+        toast.success('Resultado guardado exitosamente');
         setModalOpen(false);
         onMatchUpdated();
       } else {
@@ -65,7 +66,10 @@ const MatchTable = ({ partidos, onMatchUpdated, onEditMatch }) => {
 
   return (
     <div className="bg-nba-card p-6 rounded-lg border border-nba-border flex-1 min-w-[500px] overflow-x-auto">
-      <h3 className="font-heading text-base font-bold tracking-wide m-0 mb-4 pb-2.5 border-b-2 border-nba-blue text-nba-white block">🏆 FIXTURE Y RESULTADOS</h3>
+      <div className="flex items-center gap-2 mb-4 pb-2.5 border-b-2 border-nba-blue">
+        <Trophy className="w-5 h-5 text-nba-blue" />
+        <h3 className="font-heading text-base font-bold tracking-wide m-0 text-nba-white block">FIXTURE Y RESULTADOS</h3>
+      </div>
       <Table className="mt-3">
         <TableHeader>
           <TableRow className="border-nba-border hover:bg-transparent">
@@ -102,10 +106,14 @@ const MatchTable = ({ partidos, onMatchUpdated, onEditMatch }) => {
               <TableCell className="text-center">
                 {p.status !== 'jugado' && (
                   <div className="flex gap-1.5 justify-center">
-                    <Button onClick={() => onEditMatch(p)} size="sm" className="bg-nba-gold hover:bg-nba-gold/80 text-black font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] h-7 px-3">✏️</Button>
+                    <Button onClick={() => onEditMatch(p)} size="sm" className="bg-nba-gold hover:bg-nba-gold/80 text-black font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] h-7 w-9 p-0 flex items-center justify-center">
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button size="sm" className="bg-[#d32f2f] hover:bg-[#b71c1c] text-white font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] h-7 px-3">🗑️</Button>
+                        <Button size="sm" className="bg-[#d32f2f] hover:bg-[#b71c1c] text-white font-body font-bold text-[0.7rem] uppercase tracking-[0.8px] h-7 w-9 p-0 flex items-center justify-center">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent className="bg-nba-card border-nba-border text-nba-white">
                         <AlertDialogHeader>
