@@ -13,3 +13,6 @@ Thumbs.db
 
 # Screenshots del TPO (no son parte del proyecto)
 *.png
+
+# Compilado de Vite
+frontend/dist/

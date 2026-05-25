@@ -32,13 +32,9 @@ const Admin = () => {
   const [activeSection, setActiveSection] = useState('partidos');
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
     Promise.all([reloadEquipos(), reloadPartidos(), reloadJugadores()]);
     fetchTemporadaActiva();
-  }, [isAuthenticated, navigate, reloadEquipos, reloadPartidos, reloadJugadores]);
+  }, [reloadEquipos, reloadPartidos, reloadJugadores]);
 
   const fetchTemporadaActiva = async () => {
     try {

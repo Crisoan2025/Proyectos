@@ -144,13 +144,21 @@ const cargarResultado = async (req, res) => {
     try {
         await pool.query('BEGIN');
 
+        const checkMatch = await pool.query('SELECT status FROM matches WHERE id = $1', [id]);
+        if (!checkMatch.rows[0]) {
+            await pool.query('ROLLBACK');
+            return res.status(404).json({ error: "Partido no encontrado." });
+        }
+        if (checkMatch.rows[0].status === 'jugado') {
+            await pool.query('ROLLBACK');
+            return res.status(400).json({ error: "Este partido ya tiene un resultado cargado." });
+        }
+
         const matchResult = await pool.query(
             "UPDATE matches SET local_points = $1, visitor_points = $2, status = 'jugado' WHERE id = $3 RETURNING *",
             [local_points, visitor_points, id]
         );
         const match = matchResult.rows[0];
-
-        if (!match) throw new Error("Partido no encontrado");
 
         const seasonId = match.season_id;
 
@@ -194,9 +202,45 @@ const cargarResultado = async (req, res) => {
 const borrarPartido = async (req, res) => {
     const { id } = req.params;
     try {
+        await pool.query('BEGIN');
+
+        const matchResult = await pool.query('SELECT * FROM matches WHERE id = $1', [id]);
+        if (!matchResult.rows[0]) {
+            await pool.query('ROLLBACK');
+            return res.status(404).json({ error: "Partido no encontrado." });
+        }
+
+        const partido = matchResult.rows[0];
+
+        if (partido.status === 'jugado') {
+            // Revertir estadísticas del equipo local
+            await pool.query(`
+                UPDATE team_stats SET played = played - 1, points_for = points_for - $1,
+                points_against = points_against - $2,
+                won = CASE WHEN $1 > $2 THEN won - 1 ELSE won END,
+                lost = CASE WHEN $1 < $2 THEN lost - 1 ELSE lost END,
+                tied = CASE WHEN $1 = $2 THEN tied - 1 ELSE tied END,
+                points = CASE WHEN $1 > $2 THEN points - 3 WHEN $1 = $2 THEN points - 1 ELSE points END
+                WHERE team_id = $3 AND season_id = $4
+            `, [partido.local_points, partido.visitor_points, partido.local_team_id, partido.season_id]);
+
+            // Revertir estadísticas del equipo visitante
+            await pool.query(`
+                UPDATE team_stats SET played = played - 1, points_for = points_for - $1,
+                points_against = points_against - $2,
+                won = CASE WHEN $1 > $2 THEN won - 1 ELSE won END,
+                lost = CASE WHEN $1 < $2 THEN lost - 1 ELSE lost END,
+                tied = CASE WHEN $1 = $2 THEN tied - 1 ELSE tied END,
+                points = CASE WHEN $1 > $2 THEN points - 3 WHEN $1 = $2 THEN points - 1 ELSE points END
+                WHERE team_id = $3 AND season_id = $4
+            `, [partido.visitor_points, partido.local_points, partido.visitor_team_id, partido.season_id]);
+        }
+
         await pool.query('DELETE FROM matches WHERE id = $1', [id]);
-        res.json({ message: "Partido cancelado y eliminado" });
+        await pool.query('COMMIT');
+        res.json({ message: "Partido eliminado y estadísticas actualizadas." });
     } catch (err) {
+        await pool.query('ROLLBACK');
         res.status(500).json({ error: "Error al borrar el partido" });
     }
 };

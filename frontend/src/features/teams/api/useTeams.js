@@ -14,7 +14,7 @@ export const useTeams = (queryString = '') => {
   };
 
   const deleteTeam = async (id) => {
-    const res = await api.delete(`/equipos/${id}`, true);
+    const res = await api.del(`/equipos/${id}`, true);
     if (res.ok) {
       reload();
     }

@@ -29,6 +29,17 @@ const buildHeaders = (includeAuth = false) => {
 };
 
 /**
+ * Maneja las respuestas de la API, interceptando errores 401.
+ */
+const handleResponse = async (res) => {
+  if (res.status === 401) {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+  }
+  return res;
+};
+
+/**
  * Servicio API centralizado.
  * Todas las funciones retornan la respuesta cruda de fetch
  * para que el componente decida qué hacer con ella.
@@ -41,7 +52,7 @@ const api = {
     const res = await fetch(`${API_BASE}${endpoint}`, {
       headers: auth ? buildHeaders(true) : {},
     });
-    return res;
+    return handleResponse(res);
   },
 
   /**
@@ -53,7 +64,7 @@ const api = {
       headers: buildHeaders(auth),
       body: JSON.stringify(body),
     });
-    return res;
+    return handleResponse(res);
   },
 
   /**
@@ -65,7 +76,7 @@ const api = {
       headers: buildHeaders(auth),
       body: JSON.stringify(body),
     });
-    return res;
+    return handleResponse(res);
   },
 
   /**
@@ -76,7 +87,7 @@ const api = {
       method: 'DELETE',
       headers: buildHeaders(auth),
     });
-    return res;
+    return handleResponse(res);
   },
 };
 

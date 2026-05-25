@@ -7,6 +7,7 @@ import Equipos from './pages/Equipos';
 import Jugadores from './pages/Jugadores';
 import Login from './features/auth/pages/Login';
 import Admin from './pages/Admin';
+import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
@@ -17,7 +18,11 @@ const Layout = () => {
   if (isAdmin) {
     return (
       <Routes>
-        <Route path="/admin/*" element={<Admin />} />
+        <Route path="/admin/*" element={
+          <ProtectedRoute>
+            <Admin />
+          </ProtectedRoute>
+        } />
       </Routes>
     );
   }

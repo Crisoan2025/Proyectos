@@ -8,32 +8,20 @@
 // click expande el roster (jugadores) de cada equipo.
 // ============================================================
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../services/api';
+import useApi from '../hooks/useApi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const Equipos = () => {
-  const [equipos, setEquipos] = useState([]);
   const [equipoDetalle, setEquipoDetalle] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState('');
-  const [loading, setLoading] = useState(true);
 
-  const cargarEquipos = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = categoryFilter ? `?category=${categoryFilter}` : '';
-      const res = await api.get(`/equipos${params}`);
-      const data = await res.json();
-      setEquipos(data);
-    } catch (err) {
-      console.error('Error cargando equipos:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [categoryFilter]);
+  const endpoint = `/equipos${categoryFilter ? `?category=${categoryFilter}` : ''}`;
+  const { data: equipos, loading, reload: cargarEquipos } = useApi(endpoint);
 
   useEffect(() => {
     cargarEquipos();

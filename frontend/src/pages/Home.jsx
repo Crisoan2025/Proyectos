@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../services/api';
+import useApi from '../hooks/useApi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -22,13 +23,18 @@ const TITULARES = [
 ];
 
 const Home = () => {
-  const [equipos, setEquipos] = useState([]);
   const [temporadas, setTemporadas] = useState([]);
   const [temporadaActiva, setTemporadaActiva] = useState(null);
   const [selectedSeason, setSelectedSeason] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+
+  const params = new URLSearchParams();
+  if (selectedSeason) params.set('season_id', selectedSeason);
+  if (categoryFilter) params.set('category', categoryFilter);
+  const queryString = params.toString() ? `?${params.toString()}` : '';
+  const endpoint = `/equipos${queryString}`;
+
+  const { data: equipos, loading, error, reload: cargarEquipos } = useApi(endpoint);
 
   // Cargar temporadas al montar
   useEffect(() => {
@@ -53,30 +59,9 @@ const Home = () => {
     fetchTemporadas();
   }, []);
 
-  // Cargar equipos cuando cambia la temporada o categoría seleccionada
-  const cargarEquipos = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams();
-      if (selectedSeason) params.set('season_id', selectedSeason);
-      if (categoryFilter) params.set('category', categoryFilter);
-      const queryString = params.toString() ? `?${params.toString()}` : '';
-
-      const res = await api.get(`/equipos${queryString}`);
-      if (!res.ok) throw new Error(`Error ${res.status}`);
-      const data = await res.json();
-      setEquipos(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedSeason, categoryFilter]);
-
   useEffect(() => {
     if (selectedSeason) cargarEquipos();
-  }, [selectedSeason, categoryFilter, cargarEquipos]);
+  }, [cargarEquipos, selectedSeason]);
 
   // Nombre de la temporada seleccionada
   const selectedSeasonName = temporadas.find(t => String(t.id) === selectedSeason)?.name || 'Liga TPO';

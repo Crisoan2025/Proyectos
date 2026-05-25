@@ -35,9 +35,18 @@ const obtenerJugadores = async (req, res) => {
  */
 const crearJugador = async (req, res) => {
     const { name, surname, category, team_id } = req.body;
-    if (!name || !surname) return res.status(400).json({ message: "Nombre y apellido son obligatorios." });
+    if (!name || !surname) return res.status(400).json({ error: "Nombre y apellido son obligatorios." });
 
     try {
+        if (team_id && category) {
+            const teamResult = await pool.query('SELECT category FROM teams WHERE id = $1', [team_id]);
+            if (teamResult.rows.length > 0 && teamResult.rows[0].category !== category) {
+                return res.status(400).json({
+                    error: `La categoría del jugador (${category}) no coincide con la del equipo (${teamResult.rows[0].category}).`
+                });
+            }
+        }
+
         const result = await pool.query(
             'INSERT INTO players (name, surname, category, team_id) VALUES ($1, $2, $3, $4) RETURNING *',
             [name, surname, category, team_id]
@@ -45,7 +54,7 @@ const crearJugador = async (req, res) => {
         res.json(result.rows[0]);
     } catch (err) {
         console.log("Error al crear jugador:", err.message);
-        res.status(500).json({ message: "Error al crear jugador" });
+        res.status(500).json({ error: "Error al crear jugador" });
     }
 };
 
@@ -62,9 +71,18 @@ const editarJugador = async (req, res) => {
     const { id } = req.params;
     const { name, surname, category, team_id } = req.body;
 
-    if (!name || !surname) return res.status(400).json({ message: "Nombre y apellido son obligatorios." });
+    if (!name || !surname) return res.status(400).json({ error: "Nombre y apellido son obligatorios." });
 
     try {
+        if (team_id && category) {
+            const teamResult = await pool.query('SELECT category FROM teams WHERE id = $1', [team_id]);
+            if (teamResult.rows.length > 0 && teamResult.rows[0].category !== category) {
+                return res.status(400).json({
+                    error: `La categoría del jugador (${category}) no coincide con la del equipo (${teamResult.rows[0].category}).`
+                });
+            }
+        }
+
         const result = await pool.query(
             'UPDATE players SET name = $1, surname = $2, category = $3, team_id = $4 WHERE id = $5 RETURNING *',
             [name, surname, category, team_id, id]

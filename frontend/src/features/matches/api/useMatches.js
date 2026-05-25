@@ -21,7 +21,7 @@ export const useMatches = () => {
   };
 
   const deleteMatch = async (id) => {
-    const res = await api.delete(`/partidos/${id}`, true);
+    const res = await api.del(`/partidos/${id}`, true);
     if (res.ok) {
       reload();
     }
