@@ -10,6 +10,7 @@ import MatchForm from '../features/matches/components/MatchForm';
 import PlayerForm from '../features/players/components/PlayerForm';
 import PlayerTable from '../features/players/components/PlayerTable';
 import MatchTable from '../features/matches/components/MatchTable';
+import TeamTable from '../features/teams/components/TeamTable';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const matchFormRef = useRef(null);
+  const teamFormRef = useRef(null);
 
   const { teams: equipos, reload: reloadEquipos } = useTeams();
   const { matches: partidos, reload: reloadPartidos } = useMatches();
@@ -85,6 +87,19 @@ const Admin = () => {
     }
   };
 
+  // 🔧 AMPLIACIÓN (equipos): al guardar (alta o edición) recargamos equipos y
+  //   también partidos, para que el fixture refleje un nombre de equipo editado.
+  const handleTeamSaved = () => {
+    reloadEquipos();
+    reloadPartidos();
+  };
+
+  const handleEditTeam = (equipo) => {
+    if (teamFormRef.current) {
+      teamFormRef.current.iniciarEdicion(equipo);
+    }
+  };
+
   // Renderizar la sección activa
   const renderContent = () => {
     switch (activeSection) {
@@ -104,10 +119,9 @@ const Admin = () => {
         );
       case 'equipos':
         return (
-          <div className="flex justify-center">
-            <div className="max-w-2xl w-full">
-              <TeamForm onTeamCreated={reloadEquipos} />
-            </div>
+          <div className="flex gap-4 flex-wrap xl:flex-nowrap items-start">
+            <TeamForm ref={teamFormRef} onTeamSaved={handleTeamSaved} />
+            <TeamTable equipos={equipos} onTeamDeleted={reloadEquipos} onEditTeam={handleEditTeam} />
           </div>
         );
       case 'temporadas':

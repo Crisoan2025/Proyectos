@@ -14,6 +14,9 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 const Layout = () => {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
+  // 🔧 CORRECCIÓN: detectamos la pantalla de login para no mostrarle la cinta
+  // de partidos (ScoreboardRibbon), que rompía la estética del formulario.
+  const isLogin = location.pathname === '/login';
 
   if (isAdmin) {
     return (
@@ -30,7 +33,8 @@ const Layout = () => {
   return (
     <>
       <NavigationBar />
-      <ScoreboardRibbon />
+      {/* 🔧 CORRECCIÓN: la cinta de partidos NO se muestra en /login. */}
+      {!isLogin && <ScoreboardRibbon />}
       <div className="text-center p-0">
         <h1 className="hidden">Liga de Baloncesto TPO</h1>
         <Routes>

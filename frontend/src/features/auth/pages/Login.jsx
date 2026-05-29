@@ -5,13 +5,22 @@
 // del backend hardcodeada. Estilos inline en todo el formulario.
 // PARA QUÉ: Ahora usa AuthContext (login centralizado),
 // el servicio api.js y clases CSS del design system.
+//
+// 🎨 REDISEÑO (bloque shadcn login-01): adoptamos la estructura del
+//   bloque oficial "login-01" (Card + CardHeader/Title/Description +
+//   campos con Label asociado), adaptada a la paleta NBA. La LÓGICA de
+//   auth (AuthContext, api.post con redirectOn401:false, manejo de error
+//   y rate-limit) se conserva intacta. Sumar <Label htmlFor> mejora la
+//   accesibilidad respecto del form anterior, que solo usaba placeholder.
 // ============================================================
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../../../services/api';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 
 const Login = () => {
@@ -19,7 +28,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -52,33 +61,59 @@ const Login = () => {
   };
 
   return (
-    <div className="max-w-[420px] mx-auto mt-20 mb-20 p-10 bg-nba-card rounded-xl border border-nba-border text-center shadow-lg">
-      <h2 className="font-heading text-3xl font-black uppercase tracking-wide text-nba-white mb-2">🔑 Acceso Restringido</h2>
-      <p className="text-nba-gray text-[0.9rem] mb-6">Ingresá tus credenciales de Administrador</p>
-      
-      <form onSubmit={handleLogin} className="flex flex-col gap-4 text-left">
-        <Input 
-          type="email" 
-          placeholder="Tu correo (ej: admin@tpo.com)" 
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="bg-nba-dark border-nba-border text-nba-white placeholder:text-nba-gray"
-        />
-        <Input 
-          type="password" 
-          placeholder="Tu contraseña secreta" 
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="bg-nba-dark border-nba-border text-nba-white placeholder:text-nba-gray"
-        />
-        <Button type="submit" className="w-full bg-nba-red hover:bg-nba-red/90 text-white font-body font-bold tracking-widest mt-2" disabled={loading}>
-          {loading ? 'Verificando...' : 'ENTRAR AL PANEL VIP'}
-        </Button>
-      </form>
-
-      {error && <p className="text-nba-red font-semibold mt-4 text-sm">❌ {error}</p>}
+    <div className="flex min-h-[80vh] w-full items-center justify-center p-6 md:p-10">
+      <div className="w-full max-w-sm">
+        <Card className="bg-nba-card border border-nba-border shadow-lg">
+          <CardHeader className="text-center">
+            <CardTitle className="font-heading text-2xl font-black uppercase tracking-wide text-nba-white">
+              🔑 Acceso Restringido
+            </CardTitle>
+            <CardDescription className="text-nba-gray">
+              Ingresá tus credenciales de Administrador
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="flex flex-col gap-5 text-left">
+              <div className="grid gap-2">
+                <Label htmlFor="email" className="text-nba-lightgray uppercase text-[0.7rem] font-bold tracking-wider">
+                  Correo
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="admin@tpo.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="bg-nba-dark border-nba-border text-nba-white placeholder:text-nba-gray"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="password" className="text-nba-lightgray uppercase text-[0.7rem] font-bold tracking-wider">
+                  Contraseña
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="bg-nba-dark border-nba-border text-nba-white placeholder:text-nba-gray"
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-nba-red hover:bg-nba-red/90 text-white font-body font-bold tracking-widest mt-1"
+              >
+                {loading ? 'Verificando...' : 'ENTRAR AL PANEL VIP'}
+              </Button>
+              {error && <p className="text-nba-red font-semibold text-sm text-center">❌ {error}</p>}
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
