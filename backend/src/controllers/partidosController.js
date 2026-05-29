@@ -129,6 +129,16 @@ const editarPartido = async (req, res) => {
  * - Ahora actualiza `team_stats` (filtrado por team_id + season_id) en vez de la tabla `teams`.
  *   Esto garantiza que los puntos se asignen a la temporada correcta.
  * - Usamos transacciones ACID para que ambos equipos se actualicen juntos o ninguno.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * 🔧 CORRECCIÓN (Bug #1 — Transacciones que no eran atómicas)
+ *   ANTES: el BEGIN / UPDATE / COMMIT se hacían con `pool.query(...)`. Como el
+ *   Pool entrega una conexión distinta en cada llamada, esas sentencias podían
+ *   repartirse en conexiones diferentes: la transacción no envolvía nada, el
+ *   ROLLBACK no revertía y la conexión quedaba "idle in transaction".
+ *   AHORA: reservamos UNA conexión con `pool.connect()`, ejecutamos todo sobre
+ *   ese `client` y la liberamos en `finally`. Recién así el COMMIT/ROLLBACK es real.
+ * ─────────────────────────────────────────────────────────────────────────
  */
 const cargarResultado = async (req, res) => {
     const { id } = req.params;
@@ -141,20 +151,22 @@ const cargarResultado = async (req, res) => {
         return res.status(400).json({ error: "Los puntos no pueden ser negativos." });
     }
 
+    // 🔧 CORRECCIÓN Bug #1: reservamos UNA conexión dedicada para toda la transacción.
+    const client = await pool.connect();
     try {
-        await pool.query('BEGIN');
+        await client.query('BEGIN');
 
-        const checkMatch = await pool.query('SELECT status FROM matches WHERE id = $1', [id]);
+        const checkMatch = await client.query('SELECT status FROM matches WHERE id = $1', [id]);
         if (!checkMatch.rows[0]) {
-            await pool.query('ROLLBACK');
+            await client.query('ROLLBACK');
             return res.status(404).json({ error: "Partido no encontrado." });
         }
         if (checkMatch.rows[0].status === 'jugado') {
-            await pool.query('ROLLBACK');
+            await client.query('ROLLBACK');
             return res.status(400).json({ error: "Este partido ya tiene un resultado cargado." });
         }
 
-        const matchResult = await pool.query(
+        const matchResult = await client.query(
             "UPDATE matches SET local_points = $1, visitor_points = $2, status = 'jugado' WHERE id = $3 RETURNING *",
             [local_points, visitor_points, id]
         );
@@ -174,39 +186,49 @@ const cargarResultado = async (req, res) => {
         }
 
         // Actualizar team_stats del equipo LOCAL para esta temporada
-        await pool.query(`
+        await client.query(`
             UPDATE team_stats SET played = played + 1, won = won + $1, tied = tied + $2, lost = lost + $3,
             points = points + $4, points_for = points_for + $5, points_against = points_against + $6
             WHERE team_id = $7 AND season_id = $8
         `, [local_won, local_tied, local_lost, local_pts, local_points, visitor_points, match.local_team_id, seasonId]);
 
         // Actualizar team_stats del equipo VISITANTE para esta temporada
-        await pool.query(`
+        await client.query(`
             UPDATE team_stats SET played = played + 1, won = won + $1, tied = tied + $2, lost = lost + $3,
             points = points + $4, points_for = points_for + $5, points_against = points_against + $6
             WHERE team_id = $7 AND season_id = $8
         `, [visitor_won, visitor_tied, visitor_lost, visitor_pts, visitor_points, local_points, match.visitor_team_id, seasonId]);
 
-        await pool.query('COMMIT');
+        await client.query('COMMIT');
         res.json({ message: "¡Resultado cargado y posiciones actualizadas!" });
     } catch (err) {
-        await pool.query('ROLLBACK');
+        await client.query('ROLLBACK');
         res.status(500).json({ error: "Error al procesar el resultado" });
+    } finally {
+        // Pase lo que pase, devolvemos la conexión al pool (evita fugas e "idle in transaction").
+        client.release();
     }
 };
 
 /**
  * ¿Por qué existe esta función?
  * Para evitar "Partidos fantasma" que se programaron pero por fuerza mayor jamás se jugarán.
+ *
+ * 🔧 CORRECCIÓN (Bug #1 — Transacciones que no eran atómicas): igual que en
+ *   cargarResultado, el DELETE + la reversión de estadísticas ahora corren sobre
+ *   UNA sola conexión (`pool.connect()`), liberada en `finally`. Antes podían caer
+ *   en conexiones distintas y dejar el partido borrado pero las stats sin revertir.
  */
 const borrarPartido = async (req, res) => {
     const { id } = req.params;
+    // 🔧 CORRECCIÓN Bug #1: una sola conexión dedicada para toda la transacción.
+    const client = await pool.connect();
     try {
-        await pool.query('BEGIN');
+        await client.query('BEGIN');
 
-        const matchResult = await pool.query('SELECT * FROM matches WHERE id = $1', [id]);
+        const matchResult = await client.query('SELECT * FROM matches WHERE id = $1', [id]);
         if (!matchResult.rows[0]) {
-            await pool.query('ROLLBACK');
+            await client.query('ROLLBACK');
             return res.status(404).json({ error: "Partido no encontrado." });
         }
 
@@ -214,7 +236,7 @@ const borrarPartido = async (req, res) => {
 
         if (partido.status === 'jugado') {
             // Revertir estadísticas del equipo local
-            await pool.query(`
+            await client.query(`
                 UPDATE team_stats SET played = played - 1, points_for = points_for - $1,
                 points_against = points_against - $2,
                 won = CASE WHEN $1 > $2 THEN won - 1 ELSE won END,
@@ -225,7 +247,7 @@ const borrarPartido = async (req, res) => {
             `, [partido.local_points, partido.visitor_points, partido.local_team_id, partido.season_id]);
 
             // Revertir estadísticas del equipo visitante
-            await pool.query(`
+            await client.query(`
                 UPDATE team_stats SET played = played - 1, points_for = points_for - $1,
                 points_against = points_against - $2,
                 won = CASE WHEN $1 > $2 THEN won - 1 ELSE won END,
@@ -236,12 +258,15 @@ const borrarPartido = async (req, res) => {
             `, [partido.visitor_points, partido.local_points, partido.visitor_team_id, partido.season_id]);
         }
 
-        await pool.query('DELETE FROM matches WHERE id = $1', [id]);
-        await pool.query('COMMIT');
+        await client.query('DELETE FROM matches WHERE id = $1', [id]);
+        await client.query('COMMIT');
         res.json({ message: "Partido eliminado y estadísticas actualizadas." });
     } catch (err) {
-        await pool.query('ROLLBACK');
+        await client.query('ROLLBACK');
         res.status(500).json({ error: "Error al borrar el partido" });
+    } finally {
+        // Devolvemos la conexión al pool pase lo que pase.
+        client.release();
     }
 };
 

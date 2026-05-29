@@ -29,7 +29,9 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await api.post('/auth/login', { email, password });
+      // 🔧 CORRECCIÓN (Bug #2): pasamos { redirectOn401: false } para que un 401 de
+      // credenciales NO recargue la página; así el error se muestra acá mismo.
+      const response = await api.post('/auth/login', { email, password }, false, { redirectOn401: false });
       const data = await response.json();
 
       if (response.ok) {
@@ -37,7 +39,10 @@ const Login = () => {
         login(data.token);
         navigate('/admin');
       } else {
-        setError(data.message || 'Credenciales incorrectas');
+        // 🔧 CORRECCIÓN (Bug #2): el backend responde { error }, no { message }.
+        // Antes leíamos data.message (siempre undefined) y se perdía el detalle real
+        // (p. ej. el aviso de "demasiados intentos" del rate-limit 429).
+        setError(data.error || data.message || 'Credenciales incorrectas');
       }
     } catch (err) {
       setError('Falla de conexión con el servidor. ¿Está prendido Node?');

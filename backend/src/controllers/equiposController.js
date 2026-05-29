@@ -88,6 +88,13 @@ const obtenerEquipoPorId = async (req, res) => {
  * - Ahora recibe `category` (Senior o Junior) del body.
  * - Al crear el equipo, automáticamente crea un registro en `team_stats` 
  *   para la temporada activa con todo en 0.
+ *
+ * 🔧 CORRECCIÓN (Bug #1 — Transacciones que no eran atómicas): el INSERT del equipo
+ *   y el INSERT de sus stats ahora corren sobre UNA sola conexión (`pool.connect()`),
+ *   liberada en `finally`. Antes usaban `pool.query(...)` con BEGIN/COMMIT, que el
+ *   Pool podía repartir en conexiones distintas (transacción no real). Nota: la
+ *   lectura de la temporada activa (getActiveSeasonId) es un simple SELECT y puede
+ *   quedar fuera de la transacción sin problema.
  */
 const crearEquipo = async (req, res) => {
     const { name, coach_name, stadium, category } = req.body;
@@ -95,10 +102,12 @@ const crearEquipo = async (req, res) => {
     if (!name) return res.status(400).json({ error: "El nombre del equipo es obligatorio." });
     if (!coach_name) return res.status(400).json({ error: "El nombre del entrenador es obligatorio." });
 
+    // 🔧 CORRECCIÓN Bug #1: una sola conexión dedicada para toda la transacción.
+    const client = await pool.connect();
     try {
-        await pool.query('BEGIN');
+        await client.query('BEGIN');
 
-        const result = await pool.query(
+        const result = await client.query(
             'INSERT INTO teams (name, coach_name, stadium, category) VALUES ($1, $2, $3, $4) RETURNING *',
             [name, coach_name, stadium || 'Estadio Municipal', category || 'Senior']
         );
@@ -107,18 +116,21 @@ const crearEquipo = async (req, res) => {
         // Crear stats en 0 para la temporada activa
         const seasonId = await getActiveSeasonId();
         if (seasonId) {
-            await pool.query(
+            await client.query(
                 'INSERT INTO team_stats (team_id, season_id) VALUES ($1, $2)',
                 [newTeam.id, seasonId]
             );
         }
 
-        await pool.query('COMMIT');
+        await client.query('COMMIT');
         res.status(201).json(newTeam);
     } catch (err) {
-        await pool.query('ROLLBACK');
+        await client.query('ROLLBACK');
         console.error(err.message);
         res.status(500).json({ error: "Error al crear el equipo" });
+    } finally {
+        // Devolvemos la conexión al pool pase lo que pase.
+        client.release();
     }
 };
 

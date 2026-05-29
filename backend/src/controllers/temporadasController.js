@@ -41,40 +41,50 @@ const obtenerTemporadaActiva = async (req, res) => {
  * ¿Para qué se hace así (Decisiones de diseño)?
  * - Usamos una transacción porque son varias operaciones que deben completarse juntas.
  * - No borramos las stats anteriores; quedan como historial consultable.
+ *
+ * 🔧 CORRECCIÓN (Bug #1 — Transacciones que no eran atómicas): antes el
+ *   BEGIN/UPDATE/INSERT/COMMIT usaban `pool.query(...)` (una conexión distinta por
+ *   llamada), así que la transacción no era real. Ahora todo corre sobre un único
+ *   `client` de `pool.connect()`, liberado en `finally`.
  */
 const crearTemporada = async (req, res) => {
     const { name, start_date, end_date } = req.body;
 
     if (!name) return res.status(400).json({ error: "El nombre de la temporada es obligatorio." });
 
+    // 🔧 CORRECCIÓN Bug #1: una sola conexión para toda la transacción (commit/rollback reales).
+    const client = await pool.connect();
     try {
-        await pool.query('BEGIN');
+        await client.query('BEGIN');
 
         // Desactivar todas las temporadas anteriores
-        await pool.query('UPDATE seasons SET is_active = false');
+        await client.query('UPDATE seasons SET is_active = false');
 
         // Crear la nueva temporada como activa
-        const seasonResult = await pool.query(
+        const seasonResult = await client.query(
             'INSERT INTO seasons (name, start_date, end_date, is_active) VALUES ($1, $2, $3, true) RETURNING *',
             [name, start_date || null, end_date || null]
         );
         const newSeason = seasonResult.rows[0];
 
         // Inicializar team_stats en 0 para todos los equipos en un solo query (evita N+1)
-        const statsResult = await pool.query(
+        const statsResult = await client.query(
             'INSERT INTO team_stats (team_id, season_id) SELECT id, $1 FROM teams RETURNING team_id',
             [newSeason.id]
         );
 
-        await pool.query('COMMIT');
+        await client.query('COMMIT');
         res.status(201).json({ 
             message: `¡Temporada "${name}" creada! ${statsResult.rowCount} equipos inicializados.`, 
             temporada: newSeason 
         });
     } catch (err) {
-        await pool.query('ROLLBACK');
+        await client.query('ROLLBACK');
         console.error("Error al crear temporada:", err.message);
         res.status(500).json({ error: "Error al crear la temporada." });
+    } finally {
+        // Devolvemos la conexión al pool pase lo que pase.
+        client.release();
     }
 };
 
