@@ -1,11 +1,14 @@
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { CalendarDays, Users, ShieldPlus, Calendar, Settings, LogOut, Home } from 'lucide-react';
 import { useAuth } from '../../../features/auth/context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-export function AdminSidebar({ activeSection, setActiveSection, temporadaActiva }) {
+export function AdminSidebar({ temporadaActiva }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Sección activa según la URL (/admin/equipos -> "equipos").
+  const activeSection = location.pathname.split('/')[2] || 'partidos';
 
   const handleLogout = () => {
     logout();
@@ -47,9 +50,9 @@ export function AdminSidebar({ activeSection, setActiveSection, temporadaActiva 
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton 
+                  <SidebarMenuButton
                     isActive={activeSection === item.id}
-                    onClick={() => setActiveSection(item.id)}
+                    onClick={() => navigate(`/admin/${item.id}`)}
                     className={`font-bold uppercase tracking-wider text-[0.8rem] h-10 transition-colors ${activeSection === item.id ? 'bg-nba-blue text-white hover:bg-nba-blue/90' : 'text-nba-lightgray hover:bg-white/5 hover:text-white'}`}
                   >
                     <item.icon className="w-4 h-4 mr-2" />
