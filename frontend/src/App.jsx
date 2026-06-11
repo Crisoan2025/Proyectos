@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './features/auth/context/AuthContext';
 import NavigationBar from './components/NavigationBar';
 import ScoreboardRibbon from './features/matches/components/ScoreboardRibbon';
@@ -7,6 +7,10 @@ import Equipos from './pages/Equipos';
 import Jugadores from './pages/Jugadores';
 import Login from './features/auth/pages/Login';
 import Admin from './pages/Admin';
+import PartidosSection from './pages/admin/PartidosSection';
+import JugadoresSection from './pages/admin/JugadoresSection';
+import EquiposSection from './pages/admin/EquiposSection';
+import TemporadasSection from './pages/admin/TemporadasSection';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -21,11 +25,22 @@ const Layout = () => {
   if (isAdmin) {
     return (
       <Routes>
-        <Route path="/admin/*" element={
+        {/* Admin = layout con rutas anidadas. Cada sección es su propia URL. */}
+        <Route path="/admin" element={
           <ProtectedRoute>
             <Admin />
           </ProtectedRoute>
-        } />
+        }>
+          <Route index element={<Navigate to="partidos" replace />} />
+          <Route path="partidos" element={<PartidosSection />} />
+          <Route path="jugadores" element={<JugadoresSection />} />
+          <Route path="equipos" element={<EquiposSection />} />
+          <Route path="temporadas" element={<TemporadasSection />} />
+          {/* Sub-ruta desconocida -> volver a Partidos.
+              Ruta ABSOLUTA a propósito: una relativa se concatenaría sobre la
+              ruta basura y entraría en un loop (/admin/xxx/partidos/partidos/...). */}
+          <Route path="*" element={<Navigate to="/admin/partidos" replace />} />
+        </Route>
       </Routes>
     );
   }
