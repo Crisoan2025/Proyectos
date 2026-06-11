@@ -186,18 +186,30 @@ const cargarResultado = async (req, res) => {
         }
 
         // Actualizar team_stats del equipo LOCAL para esta temporada
-        await client.query(`
+        const localUpd = await client.query(`
             UPDATE team_stats SET played = played + 1, won = won + $1, tied = tied + $2, lost = lost + $3,
             points = points + $4, points_for = points_for + $5, points_against = points_against + $6
             WHERE team_id = $7 AND season_id = $8
         `, [local_won, local_tied, local_lost, local_pts, local_points, visitor_points, match.local_team_id, seasonId]);
 
         // Actualizar team_stats del equipo VISITANTE para esta temporada
-        await client.query(`
+        const visitorUpd = await client.query(`
             UPDATE team_stats SET played = played + 1, won = won + $1, tied = tied + $2, lost = lost + $3,
             points = points + $4, points_for = points_for + $5, points_against = points_against + $6
             WHERE team_id = $7 AND season_id = $8
         `, [visitor_won, visitor_tied, visitor_lost, visitor_pts, visitor_points, local_points, match.visitor_team_id, seasonId]);
+
+        // 🔧 CORRECCIÓN Bug #2: un UPDATE que no encuentra fila NO falla (afecta 0 filas).
+        // Si algún equipo no tiene su fila en team_stats para esta temporada, las
+        // estadísticas no se sumarían pero el partido igual quedaría 'jugado' → puntos
+        // perdidos en silencio. Verificamos que ambos UPDATE tocaran exactamente 1 fila;
+        // si no, revertimos TODO (incluido el cierre del partido) y avisamos.
+        if (localUpd.rowCount !== 1 || visitorUpd.rowCount !== 1) {
+            await client.query('ROLLBACK');
+            return res.status(409).json({
+                error: "No se encontraron estadísticas para uno de los equipos en esta temporada. El resultado no se cargó."
+            });
+        }
 
         await client.query('COMMIT');
         res.json({ message: "¡Resultado cargado y posiciones actualizadas!" });

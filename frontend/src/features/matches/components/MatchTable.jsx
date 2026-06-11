@@ -55,9 +55,16 @@ const MatchTable = ({ partidos, onMatchUpdated, onEditMatch }) => {
 
   const handleBorrar = async (id) => {
     try {
-      await api.del(`/partidos/${id}`);
-      toast.success('Partido cancelado');
-      onMatchUpdated();
+      // 🔧 CORRECCIÓN: antes no se miraba res.ok, así que un error del backend
+      // (p. ej. 404 partido inexistente) igual mostraba "Partido cancelado".
+      const res = await api.del(`/partidos/${id}`);
+      if (res.ok) {
+        toast.success('Partido cancelado');
+        onMatchUpdated();
+      } else {
+        const data = await res.json();
+        toast.error(`Error: ${data.error || 'No se pudo borrar el partido'}`);
+      }
     } catch (err) {
       console.error(err);
       toast.error('Error al borrar partido');

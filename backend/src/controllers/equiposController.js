@@ -149,6 +149,11 @@ const editarEquipo = async (req, res) => {
             'UPDATE teams SET name = $1, coach_name = $2, stadium = $3, category = $4 WHERE id = $5 RETURNING *',
             [name, coach_name, stadium, category || 'Senior', id]
         );
+        // 🔧 CORRECCIÓN: si el UPDATE no tocó ninguna fila, el equipo no existe.
+        // Antes respondíamos 200 "Equipo actualizado" con equipo: undefined (éxito falso).
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Equipo no encontrado." });
+        }
         res.json({ message: "Equipo actualizado", equipo: result.rows[0] });
     } catch (err) {
         res.status(500).json({ error: "Error al actualizar" });
@@ -163,7 +168,12 @@ const editarEquipo = async (req, res) => {
 const borrarEquipo = async (req, res) => {
     const { id } = req.params;
     try {
-        await pool.query('DELETE FROM teams WHERE id = $1', [id]);
+        const result = await pool.query('DELETE FROM teams WHERE id = $1', [id]);
+        // 🔧 CORRECCIÓN: un DELETE que no encuentra fila NO falla en SQL (afecta 0 filas).
+        // Antes respondíamos 200 "¡Equipo eliminado!" aunque el id no existiera (éxito falso).
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: "Equipo no encontrado." });
+        }
         res.json({ message: "¡Equipo eliminado!" });
     } catch (err) {
         res.status(500).json({ error: "Error al borrar" });
