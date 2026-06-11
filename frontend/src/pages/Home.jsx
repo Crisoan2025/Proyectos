@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import PlayoffBracket from '../components/PlayoffBracket';
+import CategoryFilter from '../components/CategoryFilter';
 import { Trophy } from 'lucide-react';
 
 // Datos estáticos de titulares (se reemplazarán por API en el futuro)
@@ -122,19 +123,9 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Tabs de categoría */}
+            {/* Tabs de categoría (componente compartido) */}
             <div className="flex items-center px-6 py-3 border-b border-nba-border gap-2 bg-nba-dark/50">
-              {['', 'Senior', 'Junior'].map((cat) => (
-                <Button
-                  key={cat}
-                  variant={categoryFilter === cat ? 'default' : 'outline'}
-                  size="sm"
-                  className={`h-7 px-4 text-[0.7rem] font-bold uppercase tracking-[0.8px] cursor-pointer transition-all ${categoryFilter === cat ? 'bg-nba-blue hover:bg-nba-blue/90 text-white border-nba-blue' : 'bg-transparent text-nba-gray border-nba-border hover:text-nba-white hover:border-nba-gray hover:bg-transparent'}`}
-                  onClick={() => setCategoryFilter(cat)}
-                >
-                  {cat || 'Todos'}
-                </Button>
-              ))}
+              <CategoryFilter value={categoryFilter} onChange={setCategoryFilter} />
               <span className="ml-auto text-[0.75rem] font-bold text-nba-gray uppercase tracking-wider">{selectedSeasonName}</span>
             </div>
 
