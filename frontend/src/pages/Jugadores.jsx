@@ -10,9 +10,10 @@ import { useState, useEffect, useMemo } from 'react';
 import { usePlayers } from '../features/players/api/usePlayers';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import CategoryFilter from '../components/CategoryFilter';
 
 const Jugadores = () => {
   const { players: jugadores, loading, error, reload } = usePlayers();
@@ -36,18 +37,7 @@ const Jugadores = () => {
     <div className="max-w-7xl mx-auto py-10 px-6">
       <Card className="flex flex-col sm:flex-row justify-between items-center bg-nba-card py-5 px-6 rounded-lg border-nba-border mb-8 shadow-sm">
         <h2 className="font-heading text-2xl font-black uppercase tracking-wide text-nba-white m-0 mb-4 sm:mb-0">🏃‍♂️ Jugadores de la Liga</h2>
-        <div className="flex gap-2">
-          {['', 'Senior', 'Junior'].map((cat) => (
-            <Button
-              key={cat}
-              variant={categoryFilter === cat ? 'default' : 'outline'}
-              className={`px-4 py-1.5 text-[0.75rem] font-bold uppercase tracking-[0.8px] cursor-pointer transition-all ${categoryFilter === cat ? 'bg-nba-blue hover:bg-nba-blue/90 text-white border-nba-blue' : 'bg-transparent text-nba-gray border-nba-border hover:text-nba-white hover:border-nba-gray hover:bg-transparent'}`}
-              onClick={() => setCategoryFilter(cat)}
-            >
-              {cat || 'Todos'}
-            </Button>
-          ))}
-        </div>
+        <CategoryFilter value={categoryFilter} onChange={setCategoryFilter} />
       </Card>
 
       {/* Barra de búsqueda */}
@@ -84,9 +74,13 @@ const Jugadores = () => {
         <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
           {jugadoresFiltrados.map((j) => (
             <Card key={j.id} className="flex items-center gap-4 bg-nba-card rounded-lg border-nba-border p-4 transition-transform hover:-translate-y-1 hover:shadow-md cursor-default">
-              <div className="w-12 h-12 bg-gradient-to-br from-nba-blue to-nba-dark rounded-full flex items-center justify-center font-heading font-black text-nba-white tracking-widest shrink-0 shadow-inner">
-                {j.surname?.charAt(0)}{j.name?.charAt(0)}
-              </div>
+              {/* Avatar shadcn: hoy iniciales (fallback); cuando haya fotos de
+                  jugadores alcanza con agregar <AvatarImage src={...} />. */}
+              <Avatar className="w-12 h-12 shrink-0">
+                <AvatarFallback className="bg-gradient-to-br from-nba-blue to-nba-dark font-heading font-black text-nba-white tracking-widest shadow-inner">
+                  {j.surname?.charAt(0)}{j.name?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
               <div className="flex-1 overflow-hidden">
                 <h3 className="font-heading text-base font-black uppercase tracking-wide text-nba-white m-0 truncate">{j.surname}, {j.name}</h3>
                 <span className="block text-[0.75rem] text-nba-lightgray mt-1 truncate">

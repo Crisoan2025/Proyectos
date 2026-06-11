@@ -13,8 +13,8 @@ import api from '../services/api';
 import useApi from '../hooks/useApi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import CategoryFilter from '../components/CategoryFilter';
 
 const Equipos = () => {
   const [equipoDetalle, setEquipoDetalle] = useState(null);
@@ -34,6 +34,9 @@ const Equipos = () => {
     }
     try {
       const res = await api.get(`/equipos/${id}`);
+      // 🔧 CORRECCIÓN: sin este chequeo, un error del backend se renderizaba
+      // como si fuera un equipo (objeto { error: ... } en equipoDetalle).
+      if (!res.ok) return;
       const data = await res.json();
       setEquipoDetalle(data);
     } catch (err) {
@@ -45,18 +48,7 @@ const Equipos = () => {
     <div className="max-w-7xl mx-auto py-10 px-6">
       <Card className="flex flex-col sm:flex-row justify-between items-center bg-nba-card py-5 px-6 rounded-lg border-nba-border mb-8 shadow-sm">
         <h2 className="font-heading text-2xl font-black uppercase tracking-wide text-nba-white m-0 mb-4 sm:mb-0">🏀 Equipos de la Liga</h2>
-        <div className="flex gap-2">
-          {['', 'Senior', 'Junior'].map((cat) => (
-            <Button
-              key={cat}
-              variant={categoryFilter === cat ? 'default' : 'outline'}
-              className={`px-4 py-1.5 text-[0.75rem] font-bold uppercase tracking-[0.8px] cursor-pointer transition-all ${categoryFilter === cat ? 'bg-nba-blue hover:bg-nba-blue/90 text-white border-nba-blue' : 'bg-transparent text-nba-gray border-nba-border hover:text-nba-white hover:border-nba-gray hover:bg-transparent'}`}
-              onClick={() => setCategoryFilter(cat)}
-            >
-              {cat || 'Todos'}
-            </Button>
-          ))}
-        </div>
+        <CategoryFilter value={categoryFilter} onChange={setCategoryFilter} />
       </Card>
 
       {loading && (
@@ -117,8 +109,10 @@ const Equipos = () => {
               </div>
 
               {/* Detalle expandido con roster */}
+              {/* 🔧 CORRECCIÓN: era animate-pulse (animación de skeleton) y el
+                  roster quedaba parpadeando para siempre; ahora fade-in de entrada. */}
               {equipoDetalle?.id === equipo.id && (
-                <div className="mt-5 pt-5 border-t border-dashed border-nba-border animate-pulse">
+                <div className="mt-5 pt-5 border-t border-dashed border-nba-border animate-in fade-in duration-300">
                   <h4 className="font-heading text-[0.85rem] font-black text-nba-white uppercase tracking-wider m-0 mb-3">📋 Roster ({equipoDetalle.jugadores?.length || 0} jugadores)</h4>
                   {equipoDetalle.jugadores && equipoDetalle.jugadores.length > 0 ? (
                     <ul className="list-none m-0 p-0 flex flex-col gap-2">

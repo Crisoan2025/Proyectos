@@ -24,7 +24,7 @@ const ScoreboardRibbon = () => {
     <div className="bg-nba-dark border-b border-nba-border overflow-x-auto [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-nba-border [&::-webkit-scrollbar-thumb]:rounded">
       <div className="flex gap-px p-0 min-w-max">
         {partidos.map((p) => (
-          <div key={p.id} className="bg-nba-card py-2.5 px-5 min-w-[180px] border-r border-nba-border transition-colors hover:bg-[#262626] cursor-pointer">
+          <div key={p.id} className="bg-nba-card py-2.5 px-5 min-w-[180px] border-r border-nba-border transition-colors hover:bg-[#262626]">
             <div className="mb-1.5">
               {p.status === 'jugado' ? (
                 <span className="text-[0.6rem] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-sm text-nba-red">FINAL</span>
