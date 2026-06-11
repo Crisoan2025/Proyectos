@@ -1,9 +1,13 @@
 # 🏀 Handoff — Proyecto Liga Baloncesto (TPO)
 
 > Documento de traspaso. Resume **todo lo trabajado con Claude Code** en las últimas
-> sesiones (hasta el **2026-05-29**) para que otro agente (Antigravity) pueda continuar
+> sesiones (hasta el **2026-06-10**) para que otro agente pueda continuar
 > con contexto completo. No describe el proyecto entero, sino **lo que cambió y por qué**,
 > más el trabajo pendiente recomendado.
+>
+> **Estado de `main` (2026-06-10):** todo lo descrito abajo está **mergeado en `main`**
+> (PRs #1, #2, #5, #6, #7). El build de producción pasa. Para verlo todo junto:
+> `git checkout main && git pull`, luego levantar backend y frontend.
 
 ---
 
@@ -140,6 +144,74 @@ las rutas públicas, incluida `/login`, donde quedaba feo.
 
 ---
 
+## 3.5 — Sesiones C–F (2026-06-10): integridad, jugadores, subrutas y UI
+
+Cuatro tandas de trabajo, cada una mergeada a `main` como un PR independiente.
+
+### 🐛 PR #2 — Bugs de integridad de datos (back + front)
+
+**Bug "éxito falso":** operaciones que afectan 0 filas igual respondían 200.
+- `editarEquipo` / `borrarEquipo` (`equiposController.js`): ahora chequean
+  `result.rows.length` / `rowCount` → **404** si el id no existe (antes 200 mintiendo).
+- `MatchTable.handleBorrar`: ahora mira `res.ok` (antes siempre mostraba toast verde).
+
+**Bug "pérdida silenciosa de puntos":** `cargarResultado` (`partidosController.js`)
+hacía `UPDATE team_stats ... WHERE team_id AND season_id`; si un equipo **no tenía
+fila de stats** para esa temporada, el UPDATE afectaba 0 filas **sin error**, el partido
+quedaba `'jugado'` y se hacía COMMIT → puntos perdidos sin aviso. **Fix:** se captura el
+`rowCount` de ambos UPDATE; si alguno ≠ 1 → `ROLLBACK` + **409** (el partido vuelve a
+`pendiente` y es reintentable). *Disparador real del estado roto: crear un equipo cuando
+NO hay temporada activa (`crearEquipo` salta el INSERT de stats si `!seasonId`).*
+
+### ✅ PR #5 — Edición de jugadores en el panel admin
+
+El backend ya exponía `PUT /jugadores/:id` (`editarJugador`); **solo faltaba el front**
+(mismo hueco que tuvo Equipos). Se replicó el patrón `MatchForm`/`TeamForm`:
+- `PlayerForm.jsx` → form **dual alta/edición** con `forwardRef` +
+  `useImperativeHandle.iniciarEdicion(jugador)`. Callback `onPlayerCreated` → `onPlayerSaved`.
+- `PlayerTable.jsx` → botón **editar (lápiz)** vía `onEditPlayer` + chequeo `res.ok` en la baja.
+- `Admin.jsx` → `playerFormRef`, `handleEditPlayer` y wiring.
+
+### 🔀 PR #6 — Navegación del admin por subrutas reales
+
+**Resuelve la limitación notada en la sección 6:** la navegación dejó de ser por estado
+local (`activeSection`) y pasó a **rutas reales**: `/admin/partidos`, `/admin/jugadores`,
+`/admin/equipos`, `/admin/temporadas`. Patrón **layout + `<Outlet>`**:
+- `Admin.jsx` es ahora el **layout**: carga la data compartida y la reparte por
+  `useOutletContext`; el título del header se deriva de la URL.
+- **Nuevos** `src/pages/admin/{Partidos,Jugadores,Equipos,Temporadas}Section.jsx`
+  (cada uno con su propio `ref` de edición).
+- `AdminSidebar.jsx` navega con `navigate('/admin/...')` y resalta el activo según la ruta.
+- `App.jsx` define rutas anidadas con `index` redirect y catch-all **absoluto**
+  (`<Navigate to="/admin/partidos">`; uno relativo entraba en loop).
+- **Beneficios:** recargar mantiene la sección, deep-linking y atrás/adelante del navegador.
+
+### 🎨 PR #7 — Pulido visual + mejor uso de shadcn
+
+- **`CategoryFilter.jsx`** (nuevo, sobre `<Tabs>`): reemplaza el filtro Todos/Senior/Junior
+  que estaba **triplicado a mano** en `Home`, `Equipos` y `Jugadores` (DRY).
+- **Menú hamburguesa mobile** en `NavigationBar` con `<Sheet>` (**resuelve el pendiente #4**:
+  antes los links centrales eran `hidden md:flex` sin reemplazo en celular).
+- **Menú de usuario** con `<DropdownMenu>`: **única vía de logout fuera del admin**
+  (antes "Cerrar sesión" solo existía en el sidebar del panel).
+- **`Avatar`** de jugadores con `<Avatar>`/`<AvatarFallback>` (listo para fotos vía `AvatarImage`).
+- **Fix `font-heading`** (**resuelve el pendiente #3**): se importó Roboto Condensed de Google
+  Fonts y se quitó el override `--font-heading: var(--font-sans)` en `@theme inline`. Ahora la
+  tipografía condensada deportiva sí se aplica. *(Para producción: migrar a `@fontsource/roboto-condensed`.)*
+- **Fixes menores:** roster expandido en `Equipos` usaba `animate-pulse` (parpadeo infinito de
+  skeleton) → `animate-in fade-in`; `verDetalle` ahora chequea `res.ok`; se quitó el
+  `cursor-pointer` engañoso de `ScoreboardRibbon` (no era clickeable).
+
+> Verificado en vivo (preview): Tabs, Sheet, DropdownMenu, logout, deep-linking de subrutas y
+> edición de jugadores. `npm run build` OK con todo integrado en `main`.
+
+### ⚠️ Nota sobre los hashes/emails en `supabase_migration.sql`
+El dueño del repo decidió que **para este proyecto académico no es un problema** tener los
+hashes bcrypt y emails de admin en el dump. Queda documentado (era el pendiente #10) pero
+**no se va a corregir** por decisión explícita.
+
+---
+
 ## 4. Archivos tocados (resumen)
 
 **Backend (Sesión A):**
@@ -161,40 +233,39 @@ las rutas públicas, incluida `/login`, donde quedaba feo.
 
 ---
 
-## 5. Trabajo pendiente / recomendaciones para Antigravity
+## 5. Trabajo pendiente / recomendaciones
 
-Priorizado. Nada de esto está hecho todavía.
+Priorizado. **Resueltos al 2026-06-10:** #3 (fuente, PR #7), #4 (mobile nav, PR #7).
+**Descartado por decisión del dueño:** #10 (credenciales en el dump — ver nota en sección 3.5).
 
-### 🎨 Diseño / UX (de una revisión estética hecha esta sesión)
+### 🎨 Diseño / UX (pendientes)
 1. **Contraste (accesibilidad):** `--color-nba-gray (#8A8A8A)` sobre `--color-nba-card (#1E1E1E)`
    queda ~3.5:1, **por debajo de WCAG AA (4.5:1)**, y se usa mucho en texto chico (0.65–0.7rem).
    Subir ese gris (o usar `nba-lightgray #B0B0B0`, que sí pasa).
 2. **Semántica de color de botones inconsistente:** "crear" usa **rojo** en Equipos, **azul** en
    Partidos, **verde** en Temporadas; y el rojo se usa tanto para acción primaria (GUARDAR) como
    destructiva (BORRAR). Recomendado: **rojo solo para destructivo**, un color fijo para primario.
-3. **Posible bug de tipografía:** en `frontend/src/index.css`, `--font-heading` se define como
-   `"Roboto Condensed"` (línea ~21) pero **se pisa** en `@theme inline` con `var(--font-sans)`
-   → Geist (líneas ~34-35). La fuente condensada "deportiva" probablemente **no se aplica**.
-   Verificar en DevTools y resolver el conflicto.
-4. **Mobile sin navegación:** en `NavigationBar.jsx` los links centrales son `hidden md:flex`
-   pero **no hay menú hamburguesa** que los reemplace en celular.
+3. ~~**Bug de tipografía** (`--font-heading` pisado por Geist).~~ ✅ **Hecho (PR #7).**
+4. ~~**Mobile sin navegación** (faltaba hamburguesa).~~ ✅ **Hecho (PR #7, `<Sheet>`).**
 5. **Contenido placeholder:** `Home.jsx` tiene `TITULARES` hardcodeado (noticias falsas), links
    `href="#"`, "Ver más" sin destino, hero dice "en vivo" sin datos en vivo, y `PlayoffBracket`
    siempre muestra "Por definir". Conectar a datos reales o suavizar los textos.
 6. **Exceso de UPPERCASE + tracking** en toda la UI: funciona para el look NBA pero cansa;
    dejar cuerpos/listas en sentence-case daría aire.
 
-### 🛠️ Código / arquitectura
-7. **Helper `withTransaction`:** las 4 funciones con transacción repiten el patrón
+### 🛠️ Código / arquitectura (pendientes)
+7. **Helper `withTransaction`:** las funciones con transacción repiten el patrón
    `pool.connect()/try/catch/finally`. Extraer un `backend/src/helpers/withTransaction.js` (DRY).
 8. **`PlayoffBracket.jsx`** es solo visual (semis/final fijas en "Por definir"); falta la lógica
    real de avance del bracket.
 9. **CORS abierto** en el backend: revisar y restringir orígenes para producción.
-
-### 🔒 Seguridad
-10. **`supabase_migration.sql`** (raíz del repo) contiene **hashes bcrypt y emails reales de
-    admin**, y NO está excluido por `.gitignore` (solo se ignoran `.env` y `*.png`). Revisar
-    antes de cualquier push público.
+11. **Contrato de error inconsistente:** `authMiddleware.js` responde `{ message }` mientras que
+    todos los controllers responden `{ error }` (y el front lee `data.error`). Unificar a `{ error }`
+    para que el mensaje de token vencido se muestre.
+12. **shadcn instalados sin usar / por agregar:** `separator` (decorativo), y candidatos a sumar:
+    `combobox` (búsqueda en los Select de equipos del admin), `alert` (errores con jerarquía),
+    `collapsible` (expandir roster en Equipos), `scroll-area` (cinta de marcadores). Ver review
+    de la sesión F.
 
 ---
 
@@ -202,10 +273,10 @@ Priorizado. Nada de esto está hecho todavía.
 
 - **`api.js`**: `get/post/put/del`. `put` y `del` mandan token por defecto (`auth=true`); los
   componentes-tabla llaman a `api` directamente (no via los hooks `useTeams.deleteTeam`, etc.).
-- **Navegación del admin NO es por URL:** dentro de `/admin/*` las secciones (Partidos/Jugadores/
-  Equipos/Temporadas) se cambian con un **estado local** `activeSection` en `Admin.jsx`
-  (`AdminSidebar` llama a `setActiveSection`). La URL siempre queda en `/admin`; recargar vuelve a
-  "Partidos". *(Posible mejora: sub-rutas reales `/admin/equipos`, etc.)*
+- **Navegación del admin ES por URL (desde PR #6):** cada sección es una ruta real
+  (`/admin/partidos`, `/admin/jugadores`, `/admin/equipos`, `/admin/temporadas`). `Admin.jsx` es
+  el layout (carga data, reparte por `useOutletContext`, renderiza `<Outlet>`); las secciones
+  viven en `src/pages/admin/*Section.jsx`. Recargar mantiene la sección.
 - **Patrón de edición:** form con `forwardRef` + `useImperativeHandle.iniciarEdicion(item)`,
   disparado desde la tabla por el padre (`MatchForm` y ahora `TeamForm`).
 - **Auth:** JWT en `localStorage`, `AuthContext` centraliza `isAuthenticated`/`login`/`logout`;
