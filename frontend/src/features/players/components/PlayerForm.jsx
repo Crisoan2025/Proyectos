@@ -1,30 +1,60 @@
 // ============================================================
-// PlayerForm.jsx — Formulario para fichar jugadores
+// PlayerForm.jsx — Formulario para fichar / editar jugadores
 // ============================================================
 // POR QUÉ: Era otra sección embebida en Admin.jsx con su propio
 // conjunto de 4 estados y lógica de submit.
-// PARA QUÉ: Componente enfocado exclusivamente en la creación
-// de jugadores, recibiendo la lista de equipos por props.
+// PARA QUÉ: Componente enfocado en gestionar jugadores con un
+// formulario dual (crear / editar).
+//
+// 🔧 AMPLIACIÓN: ahora soporta EDICIÓN además del alta, siguiendo el
+//   mismo patrón que MatchForm/TeamForm: forwardRef + useImperativeHandle
+//   para que el padre (Admin) inicie una edición desde la tabla (lápiz).
+//   El backend ya exponía PUT /jugadores/:id (editarJugador); solo faltaba
+//   esta parte del front. Callback renombrado onPlayerCreated → onPlayerSaved.
 // ============================================================
 
-import { useState } from 'react';
+import { useState, forwardRef, useImperativeHandle } from 'react';
 import api from '../../../services/api';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, UserCog } from 'lucide-react';
 
-const PlayerForm = ({ equipos, onPlayerCreated }) => {
+const PlayerForm = forwardRef(({ equipos, onPlayerSaved }, ref) => {
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [equipoId, setEquipoId] = useState('');
   const [category, setCategory] = useState('Senior');
+  const [editandoJugadorId, setEditandoJugadorId] = useState(null);
+
+  // El padre (Admin) llama a esto desde el botón "editar" de la tabla.
+  useImperativeHandle(ref, () => ({
+    iniciarEdicion(jugador) {
+      setEditandoJugadorId(jugador.id);
+      setNombre(jugador.name || '');
+      setApellido(jugador.surname || '');
+      setEquipoId(jugador.team_id ? jugador.team_id.toString() : '');
+      setCategory(jugador.category || 'Senior');
+    },
+  }));
+
+  const limpiarFormulario = () => {
+    setNombre('');
+    setApellido('');
+    setEquipoId('');
+    setCategory('Senior');
+    setEditandoJugadorId(null);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const endpoint = editandoJugadorId ? `/jugadores/${editandoJugadorId}` : '/jugadores';
+    const method = editandoJugadorId ? 'put' : 'post';
+
     try {
-      const res = await api.post('/jugadores', {
+      const res = await api[method](endpoint, {
         name: nombre,
         surname: apellido,
         team_id: equipoId || null,
@@ -32,27 +62,26 @@ const PlayerForm = ({ equipos, onPlayerCreated }) => {
       }, true);
 
       if (res.ok) {
-        setNombre('');
-        setApellido('');
-        setEquipoId('');
-        setCategory('Senior');
-        onPlayerCreated();
-        toast.success('¡Jugador registrado exitosamente!');
+        limpiarFormulario();
+        onPlayerSaved();
+        toast.success(editandoJugadorId ? 'Jugador actualizado' : '¡Jugador registrado exitosamente!');
       } else {
         const data = await res.json();
         toast.error(`Error: ${data.error || 'Hubo un error'}`);
       }
     } catch (err) {
       console.error(err);
-      toast.error('Error al registrar jugador');
+      toast.error(editandoJugadorId ? 'Error al actualizar jugador' : 'Error al registrar jugador');
     }
   };
 
   return (
-    <div className="bg-nba-card p-6 rounded-lg border border-nba-border flex-1 min-w-[300px]">
-      <div className="flex items-center gap-2 mb-4 pb-2.5 border-b-2 border-nba-green">
-        <UserPlus className="w-5 h-5 text-nba-green" />
-        <h3 className="font-heading text-base font-bold tracking-wide m-0 text-nba-white block">FICHA DE JUGADOR</h3>
+    <div className={`bg-nba-card p-6 rounded-lg flex-1 min-w-[300px] border ${editandoJugadorId ? 'border-nba-red' : 'border-nba-border'}`}>
+      <div className={`flex items-center gap-2 mb-4 pb-2.5 border-b-2 ${editandoJugadorId ? 'border-nba-red text-nba-red' : 'border-nba-green text-nba-green'}`}>
+        {editandoJugadorId ? <UserCog className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
+        <h3 className="font-heading text-base font-bold tracking-wide m-0 text-nba-white block">
+          {editandoJugadorId ? 'EDITAR JUGADOR' : 'FICHA DE JUGADOR'}
+        </h3>
       </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
         <div className="flex gap-2.5">
@@ -96,13 +125,21 @@ const PlayerForm = ({ equipos, onPlayerCreated }) => {
           </SelectContent>
         </Select>
 
-        <Button type="submit" className="w-full bg-nba-green hover:bg-nba-green/90 text-white font-body font-bold tracking-widest mt-2 flex items-center justify-center gap-2">
-          <UserPlus className="w-4 h-4" />
-          REGISTRAR JUGADOR
+        <Button type="submit" className={`w-full font-body font-bold uppercase tracking-widest text-white mt-2 flex items-center justify-center gap-2 ${editandoJugadorId ? 'bg-nba-red hover:bg-nba-red/90' : 'bg-nba-green hover:bg-nba-green/90'}`}>
+          {editandoJugadorId ? <UserCog className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
+          {editandoJugadorId ? 'ACTUALIZAR JUGADOR' : 'REGISTRAR JUGADOR'}
         </Button>
+
+        {editandoJugadorId && (
+          <Button type="button" onClick={limpiarFormulario} variant="secondary" className="w-full font-body font-bold uppercase tracking-widest mt-1 bg-transparent border-nba-border text-nba-white hover:bg-white/5">
+            CANCELAR EDICIÓN
+          </Button>
+        )}
       </form>
     </div>
   );
-};
+});
+
+PlayerForm.displayName = 'PlayerForm';
 
 export default PlayerForm;

@@ -23,6 +23,7 @@ const Admin = () => {
   const { isAuthenticated } = useAuth();
   const matchFormRef = useRef(null);
   const teamFormRef = useRef(null);
+  const playerFormRef = useRef(null);
 
   const { teams: equipos, reload: reloadEquipos } = useTeams();
   const { matches: partidos, reload: reloadPartidos } = useMatches();
@@ -100,6 +101,13 @@ const Admin = () => {
     }
   };
 
+  // 🔧 AMPLIACIÓN (jugadores): el lápiz de la tabla dispara la edición en el form.
+  const handleEditPlayer = (jugador) => {
+    if (playerFormRef.current) {
+      playerFormRef.current.iniciarEdicion(jugador);
+    }
+  };
+
   // Renderizar la sección activa
   const renderContent = () => {
     switch (activeSection) {
@@ -113,8 +121,8 @@ const Admin = () => {
       case 'jugadores':
         return (
           <div className="flex gap-4 flex-wrap xl:flex-nowrap items-start">
-            <PlayerForm equipos={equipos} onPlayerCreated={reloadJugadores} />
-            <PlayerTable jugadores={jugadores} onPlayerDeleted={reloadJugadores} />
+            <PlayerForm ref={playerFormRef} equipos={equipos} onPlayerSaved={reloadJugadores} />
+            <PlayerTable jugadores={jugadores} onPlayerDeleted={reloadJugadores} onEditPlayer={handleEditPlayer} />
           </div>
         );
       case 'equipos':
