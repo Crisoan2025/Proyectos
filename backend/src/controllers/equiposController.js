@@ -20,7 +20,7 @@ const obtenerEquipos = async (req, res) => {
         if (!seasonFilter) return res.status(404).json({ error: "No hay temporada activa." });
 
         let query = `
-            SELECT t.id, t.name, t.coach_name, t.stadium, t.category,
+            SELECT t.id, t.name, t.coach_name, t.stadium, t.category, t.logo_url,
                    ts.played, ts.won, ts.tied, ts.lost, ts.points,
                    ts.points_for, ts.points_against,
                    (ts.points_for - ts.points_against) AS goal_difference
@@ -97,7 +97,7 @@ const obtenerEquipoPorId = async (req, res) => {
  *   quedar fuera de la transacción sin problema.
  */
 const crearEquipo = async (req, res) => {
-    const { name, coach_name, stadium, category } = req.body;
+    const { name, coach_name, stadium, category, logo_url } = req.body;
 
     if (!name) return res.status(400).json({ error: "El nombre del equipo es obligatorio." });
     if (!coach_name) return res.status(400).json({ error: "El nombre del entrenador es obligatorio." });
@@ -108,8 +108,8 @@ const crearEquipo = async (req, res) => {
         await client.query('BEGIN');
 
         const result = await client.query(
-            'INSERT INTO teams (name, coach_name, stadium, category) VALUES ($1, $2, $3, $4) RETURNING *',
-            [name, coach_name, stadium || 'Estadio Municipal', category || 'Senior']
+            'INSERT INTO teams (name, coach_name, stadium, category, logo_url) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [name, coach_name, stadium || 'Estadio Municipal', category || 'Senior', logo_url || null]
         );
         const newTeam = result.rows[0];
 
@@ -140,14 +140,14 @@ const crearEquipo = async (req, res) => {
  */
 const editarEquipo = async (req, res) => {
     const { id } = req.params;
-    const { name, coach_name, stadium, category } = req.body;
+    const { name, coach_name, stadium, category, logo_url } = req.body;
 
     if (!name) return res.status(400).json({ error: "El nombre del equipo es obligatorio." });
     if (!coach_name) return res.status(400).json({ error: "El nombre del entrenador es obligatorio." });
     try {
         const result = await pool.query(
-            'UPDATE teams SET name = $1, coach_name = $2, stadium = $3, category = $4 WHERE id = $5 RETURNING *',
-            [name, coach_name, stadium, category || 'Senior', id]
+            'UPDATE teams SET name = $1, coach_name = $2, stadium = $3, category = $4, logo_url = $5 WHERE id = $6 RETURNING *',
+            [name, coach_name, stadium, category || 'Senior', logo_url || null, id]
         );
         // 🔧 CORRECCIÓN: si el UPDATE no tocó ninguna fila, el equipo no existe.
         // Antes respondíamos 200 "Equipo actualizado" con equipo: undefined (éxito falso).

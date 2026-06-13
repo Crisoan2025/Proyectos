@@ -1,5 +1,5 @@
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { CalendarDays, Users, ShieldPlus, Calendar, Settings, LogOut, Home } from 'lucide-react';
+import { CalendarDays, Users, ShieldPlus, Calendar, Settings, LogOut, Home, Trophy } from 'lucide-react';
 import { useAuth } from '../../../features/auth/context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -24,6 +24,7 @@ export function AdminSidebar({ temporadaActiva }) {
     { id: 'jugadores', title: 'Jugadores', icon: Users },
     { id: 'equipos', title: 'Equipos', icon: ShieldPlus },
     { id: 'temporadas', title: 'Temporadas', icon: Calendar },
+    { id: 'liga', title: 'Liga', icon: Trophy },
   ];
 
   return (

@@ -28,6 +28,7 @@ const TeamForm = forwardRef(({ onTeamSaved }, ref) => {
   //   muestra como campo, pero lo guardamos para preservarlo al editar.
   const [editandoEquipoId, setEditandoEquipoId] = useState(null);
   const [stadium, setStadium] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
 
   // 🔧 AMPLIACIÓN: el padre (Admin) llama a esto desde la TeamTable para
   //   cargar los datos del equipo y pasar el form a modo edición.
@@ -38,6 +39,7 @@ const TeamForm = forwardRef(({ onTeamSaved }, ref) => {
       setEntrenador(equipo.coach_name || '');
       setCategory(equipo.category || 'Senior');
       setStadium(equipo.stadium || '');
+      setLogoUrl(equipo.logo_url || '');
     },
   }));
 
@@ -46,6 +48,7 @@ const TeamForm = forwardRef(({ onTeamSaved }, ref) => {
     setEntrenador('');
     setCategory('Senior');
     setStadium('');
+    setLogoUrl('');
     setEditandoEquipoId(null);
   };
 
@@ -59,6 +62,7 @@ const TeamForm = forwardRef(({ onTeamSaved }, ref) => {
       coach_name: entrenador,
       stadium: editandoEquipoId ? stadium : 'Estadio ' + nombreEquipo,
       category,
+      logo_url: logoUrl || null,
     };
 
     try {
@@ -114,6 +118,21 @@ const TeamForm = forwardRef(({ onTeamSaved }, ref) => {
             <SelectItem value="Junior">Junior</SelectItem>
           </SelectContent>
         </Select>
+        {/* Logo del equipo (URL, opcional) con vista previa */}
+        <div className="flex items-center gap-2.5">
+          {logoUrl ? (
+            <img src={logoUrl} alt="" className="w-10 h-10 rounded object-contain border border-nba-border bg-white/5 shrink-0" onError={(e) => { e.currentTarget.style.opacity = '0.2'; }} />
+          ) : (
+            <div className="w-10 h-10 rounded bg-nba-dark border border-nba-border flex items-center justify-center text-lg shrink-0">🏀</div>
+          )}
+          <Input
+            type="url"
+            placeholder="URL del logo (opcional)"
+            value={logoUrl}
+            onChange={(e) => setLogoUrl(e.target.value)}
+            className="flex-1 bg-nba-dark border-nba-border text-nba-white placeholder:text-nba-gray"
+          />
+        </div>
         <Button type="submit" className="w-full bg-nba-red hover:bg-nba-red/90 text-white font-body font-bold tracking-widest mt-2 flex items-center justify-center gap-2">
           {editandoEquipoId ? <Edit2 className="w-4 h-4" /> : <ShieldPlus className="w-4 h-4" />}
           {editandoEquipoId ? 'ACTUALIZAR EQUIPO' : 'GUARDAR EQUIPO'}

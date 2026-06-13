@@ -54,7 +54,16 @@ const TeamTable = ({ equipos, onTeamDeleted, onEditTeam }) => {
         <TableBody>
           {equipos.map((eq) => (
             <TableRow key={eq.id} className="border-nba-border/50 hover:bg-white/5 transition-colors">
-              <TableCell className="font-bold uppercase text-nba-white text-[0.85rem]">{eq.name}</TableCell>
+              <TableCell className="font-bold uppercase text-nba-white text-[0.85rem]">
+                <div className="flex items-center gap-2">
+                  {eq.logo_url ? (
+                    <img src={eq.logo_url} alt="" className="w-6 h-6 rounded object-contain bg-white/5 shrink-0" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                  ) : (
+                    <span className="text-sm shrink-0">🏀</span>
+                  )}
+                  {eq.name}
+                </div>
+              </TableCell>
               <TableCell className="text-[0.75rem] text-nba-gray">{eq.coach_name || '—'}</TableCell>
               <TableCell className="text-center text-[0.75rem] text-nba-lightgray">{eq.category}</TableCell>
               <TableCell className="text-center">

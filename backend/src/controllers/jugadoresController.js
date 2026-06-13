@@ -34,7 +34,7 @@ const obtenerJugadores = async (req, res) => {
  *   Obligamos a que la data entrante sea de calidad antes de siquiera tocar la base de datos.
  */
 const crearJugador = async (req, res) => {
-    const { name, surname, category, team_id } = req.body;
+    const { name, surname, category, team_id, photo_url } = req.body;
     if (!name || !surname) return res.status(400).json({ error: "Nombre y apellido son obligatorios." });
 
     try {
@@ -48,8 +48,8 @@ const crearJugador = async (req, res) => {
         }
 
         const result = await pool.query(
-            'INSERT INTO players (name, surname, category, team_id) VALUES ($1, $2, $3, $4) RETURNING *',
-            [name, surname, category, team_id]
+            'INSERT INTO players (name, surname, category, team_id, photo_url) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [name, surname, category, team_id, photo_url || null]
         );
         res.json(result.rows[0]);
     } catch (err) {
@@ -69,7 +69,7 @@ const crearJugador = async (req, res) => {
  */
 const editarJugador = async (req, res) => {
     const { id } = req.params;
-    const { name, surname, category, team_id } = req.body;
+    const { name, surname, category, team_id, photo_url } = req.body;
 
     if (!name || !surname) return res.status(400).json({ error: "Nombre y apellido son obligatorios." });
 
@@ -84,9 +84,13 @@ const editarJugador = async (req, res) => {
         }
 
         const result = await pool.query(
-            'UPDATE players SET name = $1, surname = $2, category = $3, team_id = $4 WHERE id = $5 RETURNING *',
-            [name, surname, category, team_id, id]
+            'UPDATE players SET name = $1, surname = $2, category = $3, team_id = $4, photo_url = $5 WHERE id = $6 RETURNING *',
+            [name, surname, category, team_id, photo_url || null, id]
         );
+        // 🔧 si el id no existe, avisamos en vez de devolver éxito vacío
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Jugador no encontrado." });
+        }
         res.json({ message: "Jugador actualizado", jugador: result.rows[0] });
     } catch (err) {
         res.status(500).json({ error: "Error al actualizar" });

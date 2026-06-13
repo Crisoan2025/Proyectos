@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './features/auth/context/AuthContext';
+import { SettingsProvider } from './features/settings/SettingsContext';
 import NavigationBar from './components/NavigationBar';
 import ScoreboardRibbon from './features/matches/components/ScoreboardRibbon';
 import Home from './pages/Home';
@@ -11,6 +12,7 @@ import PartidosSection from './pages/admin/PartidosSection';
 import JugadoresSection from './pages/admin/JugadoresSection';
 import EquiposSection from './pages/admin/EquiposSection';
 import TemporadasSection from './pages/admin/TemporadasSection';
+import LigaSection from './pages/admin/LigaSection';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -36,6 +38,7 @@ const Layout = () => {
           <Route path="jugadores" element={<JugadoresSection />} />
           <Route path="equipos" element={<EquiposSection />} />
           <Route path="temporadas" element={<TemporadasSection />} />
+          <Route path="liga" element={<LigaSection />} />
           {/* Sub-ruta desconocida -> volver a Partidos.
               Ruta ABSOLUTA a propósito: una relativa se concatenaría sobre la
               ruta basura y entraría en un loop (/admin/xxx/partidos/partidos/...). */}
@@ -67,10 +70,12 @@ function App() {
   return (
     <TooltipProvider delayDuration={0}>
       <AuthProvider>
-        <Router>
-          <Layout />
-        </Router>
-        <Toaster theme="dark" richColors closeButton />
+        <SettingsProvider>
+          <Router>
+            <Layout />
+          </Router>
+          <Toaster theme="dark" richColors closeButton />
+        </SettingsProvider>
       </AuthProvider>
     </TooltipProvider>
   );

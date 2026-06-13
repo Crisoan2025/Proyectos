@@ -26,6 +26,7 @@ const SECTION_TITLES = {
   jugadores: 'Gestión de Roster',
   equipos: 'Inscripción de Equipos',
   temporadas: 'Configuración de Campeonato',
+  liga: 'Identidad de la Liga',
 };
 
 const Admin = () => {

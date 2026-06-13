@@ -19,6 +19,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/context/AuthContext';
+import { useSettings } from '../features/settings/SettingsContext';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
@@ -39,10 +40,27 @@ const NAV_LINKS = [
   { to: '/jugadores', label: 'Jugadores' },
 ];
 
+// Logo de la liga: imagen si hay logo_url, si no el emoji 🏀 (fallback también si la imagen rompe).
+const LeagueLogo = ({ logoUrl, className }) =>
+  logoUrl ? (
+    <img
+      src={logoUrl}
+      alt=""
+      className={`object-contain ${className}`}
+      onError={(e) => { e.currentTarget.replaceWith(Object.assign(document.createElement('span'), { textContent: '🏀', className: 'text-2xl' })); }}
+    />
+  ) : (
+    <span className="text-2xl">🏀</span>
+  );
+
 const NavigationBar = () => {
   const { isAuthenticated, logout } = useAuth();
+  const { settings } = useSettings();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const leagueName = settings.league_name || 'LIGA TPO';
+  const leagueLogo = settings.league_logo_url;
 
   const handleLogout = () => {
     logout();
@@ -65,8 +83,8 @@ const NavigationBar = () => {
             <SheetContent side="left" className="bg-nba-black border-r border-nba-border text-nba-white w-72 p-0">
               <SheetHeader className="p-4 border-b border-nba-border">
                 <SheetTitle className="flex items-center gap-2.5 text-nba-white">
-                  <span className="text-2xl">🏀</span>
-                  <span className="font-heading font-black text-xl tracking-widest">LIGA TPO</span>
+                  <LeagueLogo logoUrl={leagueLogo} className="w-7 h-7" />
+                  <span className="font-heading font-black text-xl tracking-widest">{leagueName}</span>
                 </SheetTitle>
               </SheetHeader>
               <div className="flex flex-col p-2">
@@ -111,8 +129,8 @@ const NavigationBar = () => {
           </Sheet>
 
           <Link to="/" className="flex items-center gap-2.5">
-            <span className="text-2xl">🏀</span>
-            <span className="font-heading font-black text-xl tracking-widest text-nba-white">LIGA TPO</span>
+            <LeagueLogo logoUrl={leagueLogo} className="w-7 h-7" />
+            <span className="font-heading font-black text-xl tracking-widest text-nba-white">{leagueName}</span>
           </Link>
         </div>
 
