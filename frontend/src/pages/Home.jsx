@@ -12,17 +12,6 @@ import PlayoffBracket from '../components/PlayoffBracket';
 import CategoryFilter from '../components/CategoryFilter';
 import { Trophy } from 'lucide-react';
 
-// Datos estáticos de titulares (se reemplazarán por API en el futuro)
-const TITULARES = [
-  { id: 1, text: 'Toca para ver: Dónde encontrar todos los partidos de los playoffs' },
-  { id: 2, text: 'Actualizaciones en vivo: Resultados de la Jornada 3' },
-  { id: 3, text: 'El MVP de la temporada será anunciado esta semana' },
-  { id: 4, text: 'Nuevas reglas de la liga para la próxima temporada' },
-  { id: 5, text: 'Los mejores quintetos de la temporada regular' },
-  { id: 6, text: 'El draft de rookies: Jugadores elegibles confirmados' },
-  { id: 7, text: 'Estadísticas: Los líderes en puntos, asistencias y rebotes' },
-];
-
 const Home = () => {
   const [temporadas, setTemporadas] = useState([]);
   const [temporadaActiva, setTemporadaActiva] = useState(null);
@@ -40,6 +29,8 @@ const Home = () => {
   // playoffs (phase != 'regular') para hacer avanzar a los ganadores.
   const { data: partidos, reload: cargarPartidos } = useApi(`/partidos${queryString}`);
   const partidosPlayoffs = partidos.filter((p) => p.phase && p.phase !== 'regular');
+  // Palmarés: campeón de cada temporada/categoría (ganador de la final de playoffs)
+  const { data: campeones, reload: cargarCampeones } = useApi('/temporadas/campeones');
 
   // Cargar temporadas al montar
   useEffect(() => {
@@ -62,7 +53,8 @@ const Home = () => {
       }
     };
     fetchTemporadas();
-  }, []);
+    cargarCampeones();
+  }, [cargarCampeones]);
 
   useEffect(() => {
     if (selectedSeason) {
@@ -244,21 +236,38 @@ const Home = () => {
           </Card>
         </main>
 
-        {/* COLUMNA DERECHA — Titulares */}
+        {/* COLUMNA DERECHA — Palmarés (campeones por temporada) */}
         <aside>
           <Card className="bg-nba-card rounded-lg border-nba-border overflow-hidden">
             <CardHeader className="flex flex-row justify-between items-center p-5 pb-4 border-b border-nba-border space-y-0">
-              <CardTitle className="font-heading text-lg font-black tracking-wide m-0 text-nba-white">TITULARES</CardTitle>
-              <span className="text-[0.75rem] text-nba-blue cursor-pointer hover:text-[#3a6ad4] transition-colors">Ver más</span>
+              <CardTitle className="font-heading text-lg font-black tracking-wide m-0 text-nba-white">🏆 PALMARÉS</CardTitle>
+              <span className="text-[0.65rem] font-bold uppercase tracking-wider text-nba-gray">Campeones</span>
             </CardHeader>
             <CardContent className="p-0">
-              <ul className="m-0 p-0 list-none">
-                {TITULARES.map((noticia) => (
-                  <li key={noticia.id} className="border-b border-nba-border last:border-none hover:bg-white/5 transition-colors">
-                    <a href="#" className="block py-4 px-6 text-[0.85rem] text-nba-lightgray leading-relaxed hover:text-nba-white transition-colors">{noticia.text}</a>
-                  </li>
-                ))}
-              </ul>
+              {campeones.length === 0 ? (
+                <p className="text-center py-8 px-6 text-nba-gray text-[0.85rem] leading-relaxed m-0">
+                  Todavía no hay campeones.<br />La primera final de playoffs está por jugarse. 🏀
+                </p>
+              ) : (
+                <ul className="m-0 p-0 list-none">
+                  {campeones.map((c) => (
+                    <li key={`${c.season_id}-${c.category}`} className="flex items-center gap-3 py-4 px-6 border-b border-nba-border last:border-none hover:bg-white/5 transition-colors">
+                      {c.logo_url ? (
+                        <img src={c.logo_url} alt="" className="w-9 h-9 rounded object-contain bg-white/5 shrink-0" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                      ) : (
+                        <span className="text-xl w-9 h-9 rounded bg-nba-dark border border-nba-border flex items-center justify-center shrink-0">🏀</span>
+                      )}
+                      <div className="flex-1 overflow-hidden">
+                        <div className="font-heading text-[0.9rem] font-black uppercase tracking-wide text-nba-white truncate">{c.team_name}</div>
+                        <div className="text-[0.7rem] text-nba-gray uppercase tracking-wider mt-0.5">{c.season_name}</div>
+                      </div>
+                      <Badge variant="secondary" className={`text-[0.6rem] font-bold uppercase tracking-[0.5px] border-transparent shrink-0 ${c.category === 'Junior' ? 'bg-nba-green/20 text-nba-green hover:bg-nba-green/30' : 'bg-nba-gold/20 text-nba-gold hover:bg-nba-gold/30'}`}>
+                        {c.category}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </CardContent>
           </Card>
         </aside>
