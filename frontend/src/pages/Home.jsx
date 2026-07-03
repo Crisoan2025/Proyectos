@@ -36,6 +36,10 @@ const Home = () => {
   const endpoint = `/equipos${queryString}`;
 
   const { data: equipos, loading, error, reload: cargarEquipos } = useApi(endpoint);
+  // Partidos de la misma temporada/categoría: el bracket necesita los de
+  // playoffs (phase != 'regular') para hacer avanzar a los ganadores.
+  const { data: partidos, reload: cargarPartidos } = useApi(`/partidos${queryString}`);
+  const partidosPlayoffs = partidos.filter((p) => p.phase && p.phase !== 'regular');
 
   // Cargar temporadas al montar
   useEffect(() => {
@@ -61,8 +65,11 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedSeason) cargarEquipos();
-  }, [cargarEquipos, selectedSeason]);
+    if (selectedSeason) {
+      cargarEquipos();
+      cargarPartidos();
+    }
+  }, [cargarEquipos, cargarPartidos, selectedSeason]);
 
   // Nombre de la temporada seleccionada
   const selectedSeasonName = temporadas.find(t => String(t.id) === selectedSeason)?.name || 'Liga TPO';
@@ -107,7 +114,11 @@ const Home = () => {
               <div className="flex items-center gap-2">
                 {/* Selector de temporada */}
                 {selectedSeason && (
-                  <Select value={selectedSeason} onValueChange={setSelectedSeason}>
+                  <Select
+                    value={selectedSeason}
+                    onValueChange={setSelectedSeason}
+                    items={Object.fromEntries(temporadas.map((t) => [String(t.id), t.name]))}
+                  >
                     <SelectTrigger className="w-[180px] bg-nba-dark border-nba-border text-nba-lightgray h-8 text-[0.75rem]">
                       <SelectValue placeholder="Temporada" />
                     </SelectTrigger>
@@ -256,7 +267,7 @@ const Home = () => {
       {/* ============ BRACKET DE PLAYOFFS (ancho completo) ============ */}
       {!loading && !error && equipos.length >= 8 && (
         <div className="max-w-7xl mx-auto px-6 pb-8">
-          <PlayoffBracket equipos={equipos} />
+          <PlayoffBracket equipos={equipos} partidos={partidosPlayoffs} />
         </div>
       )}
     </div>

@@ -15,7 +15,11 @@ import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { Trophy, Edit2, Trash2 } from 'lucide-react';
+
+// Etiquetas visibles para las fases de playoffs (regular no lleva badge)
+const FASE_LABELS = { cuartos: 'CUARTOS', semis: 'SEMIS', final: 'FINAL' };
 
 const MatchTable = ({ partidos, onMatchUpdated, onEditMatch }) => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -95,6 +99,11 @@ const MatchTable = ({ partidos, onMatchUpdated, onEditMatch }) => {
                 📍 {p.location || 'Estadio Central'}
               </TableCell>
               <TableCell className="text-center">
+                {FASE_LABELS[p.phase] && (
+                  <Badge variant="secondary" className="bg-nba-gold/20 text-nba-gold border-transparent text-[0.6rem] font-bold uppercase tracking-wider mb-1 hover:bg-nba-gold/30">
+                    🏆 {FASE_LABELS[p.phase]}
+                  </Badge>
+                )}
                 <div className="font-bold text-[0.85rem] text-nba-white">{p.local_name}</div>
                 <div className={`font-black my-1 text-[1.1rem] ${p.status === 'jugado' ? 'text-nba-red' : 'text-nba-gray'}`}>
                   {p.status === 'jugado' ? `${p.local_points} - ${p.visitor_points}` : 'VS'}
