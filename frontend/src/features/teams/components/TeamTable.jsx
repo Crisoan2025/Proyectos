@@ -37,12 +37,14 @@ const TeamTable = ({ equipos, onTeamDeleted, onEditTeam }) => {
   };
 
   return (
-    <div className="bg-nba-card p-6 rounded-lg border border-nba-border flex-1 min-w-[400px] overflow-x-auto">
+    <div className="bg-nba-card p-6 rounded-lg border border-nba-border flex-1 min-w-0 w-full overflow-x-auto">
       <div className="flex items-center gap-2 mb-4 pb-2.5 border-b-2 border-nba-blue">
         <ShieldCheck className="w-5 h-5 text-nba-blue" />
         <h3 className="font-heading text-base font-bold tracking-wide m-0 text-nba-white block">PLANTEL DE EQUIPOS</h3>
       </div>
-      <Table className="mt-3">
+      {/* [&_td]:whitespace-normal: permite quebrar línea en nombres largos
+          para que la tabla no desborde con scroll horizontal. */}
+      <Table className="mt-3 [&_td]:whitespace-normal">
         <TableHeader>
           <TableRow className="border-nba-border hover:bg-transparent">
             <TableHead className="text-nba-gray uppercase tracking-widest text-[0.7rem]">Equipo</TableHead>

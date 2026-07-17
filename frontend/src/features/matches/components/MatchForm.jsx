@@ -26,6 +26,7 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
   const [fecha, setFecha] = useState('');
   const [hora, setHora] = useState('20:00');
   const [lugar, setLugar] = useState('');
+  const [fase, setFase] = useState('regular');
   const [editandoPartidoId, setEditandoPartidoId] = useState(null);
 
   useImperativeHandle(ref, () => ({
@@ -36,6 +37,7 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
       setFecha(partido.match_date.split('T')[0]);
       setHora(partido.match_time || '20:00');
       setLugar(partido.location || '');
+      setFase(partido.phase || 'regular');
     },
   }));
 
@@ -53,7 +55,18 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
     setFecha('');
     setHora('20:00');
     setLugar('');
+    setFase('regular');
     setEditandoPartidoId(null);
+  };
+
+  // items para los Select de base-ui: sin esto el trigger muestra el value
+  // crudo (id del equipo / clave de la fase) en vez de la etiqueta.
+  const equipoItems = Object.fromEntries(equipos.map((eq) => [eq.id.toString(), eq.name]));
+  const faseItems = {
+    regular: 'Temporada regular',
+    cuartos: 'Playoffs — Cuartos',
+    semis: 'Playoffs — Semifinal',
+    final: 'Playoffs — Final',
   };
 
   const handleSubmit = async (e) => {
@@ -77,6 +90,7 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
         match_date: fecha,
         match_time: hora,
         location: lugar,
+        phase: fase,
       }, true);
 
       if (res.ok) {
@@ -94,7 +108,7 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
   };
 
   return (
-    <div className={`bg-nba-card p-6 rounded-lg flex-1 min-w-[300px] border ${editandoPartidoId ? 'border-nba-red' : 'border-nba-border'}`}>
+    <div className={`bg-nba-card p-6 rounded-lg w-full xl:w-80 xl:shrink-0 border ${editandoPartidoId ? 'border-nba-red' : 'border-nba-border'}`}>
       <div className={`flex items-center gap-2 mb-4 pb-2.5 border-b-2 ${editandoPartidoId ? 'border-nba-red text-nba-red' : 'border-nba-blue text-nba-blue'}`}>
         {editandoPartidoId ? <Edit2 className="w-5 h-5" /> : <CalendarPlus className="w-5 h-5" />}
         <h3 className="font-heading text-base font-bold tracking-wide m-0 text-nba-white">
@@ -102,7 +116,7 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
         </h3>
       </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
-        <Select value={localId} onValueChange={handleLocalChange} required>
+        <Select value={localId} onValueChange={handleLocalChange} items={equipoItems} required>
           <SelectTrigger className="bg-nba-dark border-nba-border text-nba-white">
             <SelectValue placeholder="Seleccionar Local..." />
           </SelectTrigger>
@@ -113,7 +127,7 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
           </SelectContent>
         </Select>
 
-        <Select value={visitanteId} onValueChange={setVisitanteId} required>
+        <Select value={visitanteId} onValueChange={setVisitanteId} items={equipoItems} required>
           <SelectTrigger className="bg-nba-dark border-nba-border text-nba-white">
             <SelectValue placeholder="Seleccionar Visitante..." />
           </SelectTrigger>
@@ -161,6 +175,19 @@ const MatchForm = forwardRef(({ equipos, onMatchSaved }, ref) => {
         </div>
 
         <Input type="text" placeholder="Estadio / Lugar" value={lugar} onChange={(e) => setLugar(e.target.value)} required className="bg-nba-dark border-nba-border text-nba-white placeholder-nba-gray" />
+
+        {/* Fase del partido: los de playoffs no suman a la tabla de posiciones */}
+        <Select value={fase} onValueChange={setFase} items={faseItems}>
+          <SelectTrigger className="bg-nba-dark border-nba-border text-nba-white">
+            <SelectValue placeholder="Fase del partido" />
+          </SelectTrigger>
+          <SelectContent className="bg-nba-card border-nba-border text-nba-white">
+            <SelectItem value="regular">Temporada regular</SelectItem>
+            <SelectItem value="cuartos">Playoffs — Cuartos</SelectItem>
+            <SelectItem value="semis">Playoffs — Semifinal</SelectItem>
+            <SelectItem value="final">Playoffs — Final</SelectItem>
+          </SelectContent>
+        </Select>
 
         <Button type="submit" className={`w-full font-body font-bold uppercase tracking-[0.8px] text-white mt-2 flex items-center justify-center gap-2 ${editandoPartidoId ? 'bg-nba-red hover:bg-nba-red/90' : 'bg-nba-blue hover:bg-nba-blue/90'}`}>
           {editandoPartidoId ? <Edit2 className="w-4 h-4" /> : <CalendarPlus className="w-4 h-4" />}

@@ -13,25 +13,55 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import CategoryFilter from '../components/CategoryFilter';
+
+// Valores especiales del filtro de equipo (los ids reales son numéricos)
+const TODOS_LOS_EQUIPOS = 'todos';
+const AGENTE_LIBRE = 'libre';
 
 const Jugadores = () => {
   const { players: jugadores, loading, error, reload } = usePlayers();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [teamFilter, setTeamFilter] = useState(TODOS_LOS_EQUIPOS);
 
   useEffect(() => {
     reload();
   }, [reload]);
+
+  // Equipos únicos derivados de los propios jugadores (sin fetch extra):
+  // solo aparecen equipos que tienen al menos un jugador.
+  const equipos = useMemo(() => {
+    const map = new Map();
+    jugadores.forEach((j) => {
+      if (j.team_id && !map.has(j.team_id)) map.set(j.team_id, j.team_name);
+    });
+    return [...map.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [jugadores]);
+
+  // items para el Select de base-ui: sin esto el trigger muestra el value
+  // crudo (el id numérico) en vez del nombre del equipo.
+  const teamItems = useMemo(() => {
+    const items = { [TODOS_LOS_EQUIPOS]: 'Todos los equipos' };
+    equipos.forEach((eq) => { items[String(eq.id)] = eq.name; });
+    items[AGENTE_LIBRE] = 'Agente Libre';
+    return items;
+  }, [equipos]);
 
   // useMemo para no recalcular el filtro en cada render
   const jugadoresFiltrados = useMemo(() => {
     return jugadores.filter((j) => {
       const matchesSearch = `${j.name} ${j.surname}`.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = !categoryFilter || j.category === categoryFilter;
-      return matchesSearch && matchesCategory;
+      const matchesTeam =
+        teamFilter === TODOS_LOS_EQUIPOS ||
+        (teamFilter === AGENTE_LIBRE ? !j.team_id : String(j.team_id) === teamFilter);
+      return matchesSearch && matchesCategory && matchesTeam;
     });
-  }, [jugadores, searchTerm, categoryFilter]);
+  }, [jugadores, searchTerm, categoryFilter, teamFilter]);
 
   return (
     <div className="max-w-7xl mx-auto py-10 px-6">
@@ -49,7 +79,20 @@ const Jugadores = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full max-w-md bg-nba-card border-nba-border text-nba-white placeholder:text-nba-gray"
         />
-        <span className="text-[0.8rem] font-bold uppercase tracking-wider text-nba-gray">
+        {/* Filtro por equipo */}
+        <Select value={teamFilter} onValueChange={setTeamFilter} items={teamItems}>
+          <SelectTrigger className="w-full sm:w-[220px] bg-nba-card border-nba-border text-nba-white">
+            <SelectValue placeholder="Equipo" />
+          </SelectTrigger>
+          <SelectContent className="bg-nba-card border-nba-border text-nba-white">
+            <SelectItem value={TODOS_LOS_EQUIPOS}>Todos los equipos</SelectItem>
+            {equipos.map((eq) => (
+              <SelectItem key={eq.id} value={String(eq.id)}>{eq.name}</SelectItem>
+            ))}
+            <SelectItem value={AGENTE_LIBRE}>Agente Libre</SelectItem>
+          </SelectContent>
+        </Select>
+        <span className="text-[0.8rem] font-bold uppercase tracking-wider text-nba-gray shrink-0">
           {jugadoresFiltrados.length} jugador{jugadoresFiltrados.length !== 1 ? 'es' : ''}
         </span>
       </div>

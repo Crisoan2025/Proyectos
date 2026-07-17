@@ -80,7 +80,7 @@ const PlayerForm = forwardRef(({ equipos, onPlayerSaved }, ref) => {
   };
 
   return (
-    <div className={`bg-nba-card p-6 rounded-lg flex-1 min-w-[300px] border ${editandoJugadorId ? 'border-nba-red' : 'border-nba-border'}`}>
+    <div className={`bg-nba-card p-6 rounded-lg w-full xl:w-80 xl:shrink-0 border ${editandoJugadorId ? 'border-nba-red' : 'border-nba-border'}`}>
       <div className={`flex items-center gap-2 mb-4 pb-2.5 border-b-2 ${editandoJugadorId ? 'border-nba-red text-nba-red' : 'border-nba-green text-nba-green'}`}>
         {editandoJugadorId ? <UserCog className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
         <h3 className="font-heading text-base font-bold tracking-wide m-0 text-nba-white block">

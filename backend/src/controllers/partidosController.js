@@ -1,6 +1,10 @@
 const pool = require('../db');
 const { getActiveSeasonId } = require('../helpers/seasonHelper');
 
+// Fases válidas de un partido. 'regular' cuenta para la tabla de posiciones;
+// las otras tres son de playoffs y NO tocan team_stats.
+const FASES_VALIDAS = ['regular', 'cuartos', 'semis', 'final'];
+
 /**
  * ¿Por qué existe esta función?
  * Para armar el "Fixture" visual; muestra quién juega contra quién.
@@ -10,14 +14,14 @@ const { getActiveSeasonId } = require('../helpers/seasonHelper');
  * - Si no se manda season_id, usa la temporada activa por defecto.
  */
 const obtenerPartidos = async (req, res) => {
-    const { season_id, category } = req.query;
+    const { season_id, category, phase } = req.query;
 
     try {
         const seasonFilter = season_id || await getActiveSeasonId();
         if (!seasonFilter) return res.json([]);
 
         let query = `
-            SELECT m.*, tl.name as local_name, tv.name as visitor_name 
+            SELECT m.*, tl.name as local_name, tv.name as visitor_name
             FROM matches m
             JOIN teams tl ON m.local_team_id = tl.id
             JOIN teams tv ON m.visitor_team_id = tv.id
@@ -26,8 +30,13 @@ const obtenerPartidos = async (req, res) => {
         const params = [seasonFilter];
 
         if (category) {
-            query += ` AND m.category = $2`;
             params.push(category);
+            query += ` AND m.category = $${params.length}`;
+        }
+
+        if (phase) {
+            params.push(phase);
+            query += ` AND m.phase = $${params.length}`;
         }
 
         query += ` ORDER BY m.id DESC`;
@@ -51,13 +60,16 @@ const obtenerPartidos = async (req, res) => {
  *   jugar contra uno Junior porque son niveles de competencia distintos.
  */
 const crearPartido = async (req, res) => {
-    const { local_team_id, visitor_team_id, match_date, match_time, location } = req.body;
+    const { local_team_id, visitor_team_id, match_date, match_time, location, phase } = req.body;
 
     if (!local_team_id || !visitor_team_id || !match_date) {
         return res.status(400).json({ error: "Faltan datos obligatorios." });
     }
     if (local_team_id === visitor_team_id) {
         return res.status(400).json({ error: "Un equipo no puede jugar contra sí mismo." });
+    }
+    if (phase && !FASES_VALIDAS.includes(phase)) {
+        return res.status(400).json({ error: `Fase inválida. Valores permitidos: ${FASES_VALIDAS.join(', ')}.` });
     }
 
     try {
@@ -84,8 +96,8 @@ const crearPartido = async (req, res) => {
         const matchCategory = localTeam.rows[0].category;
 
         const result = await pool.query(
-            'INSERT INTO matches (local_team_id, visitor_team_id, match_date, match_time, location, status, season_id, category) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-            [local_team_id, visitor_team_id, match_date, match_time || '20:00', location || 'Estadio Central', 'pendiente', seasonId, matchCategory]
+            'INSERT INTO matches (local_team_id, visitor_team_id, match_date, match_time, location, status, season_id, category, phase) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+            [local_team_id, visitor_team_id, match_date, match_time || '20:00', location || 'Estadio Central', 'pendiente', seasonId, matchCategory, phase || 'regular']
         );
         res.status(201).json({ message: "Partido programado", partido: result.rows[0] });
     } catch (err) {
@@ -100,14 +112,18 @@ const crearPartido = async (req, res) => {
  */
 const editarPartido = async (req, res) => {
     const { id } = req.params;
-    const { match_date, match_time, location } = req.body;
+    const { match_date, match_time, location, phase } = req.body;
 
     if (!match_date) return res.status(400).json({ error: "La fecha del partido es obligatoria." });
+    if (phase && !FASES_VALIDAS.includes(phase)) {
+        return res.status(400).json({ error: `Fase inválida. Valores permitidos: ${FASES_VALIDAS.join(', ')}.` });
+    }
 
     try {
+        // COALESCE: si el front no manda phase, se conserva la actual.
         const result = await pool.query(
-            'UPDATE matches SET match_date = $1, match_time = $2, location = $3 WHERE id = $4 RETURNING *',
-            [match_date, match_time, location, id]
+            'UPDATE matches SET match_date = $1, match_time = $2, location = $3, phase = COALESCE($4, phase) WHERE id = $5 RETURNING *',
+            [match_date, match_time, location, phase || null, id]
         );
         
         if (result.rows.length === 0) {
@@ -156,7 +172,7 @@ const cargarResultado = async (req, res) => {
     try {
         await client.query('BEGIN');
 
-        const checkMatch = await client.query('SELECT status FROM matches WHERE id = $1', [id]);
+        const checkMatch = await client.query('SELECT status, phase FROM matches WHERE id = $1', [id]);
         if (!checkMatch.rows[0]) {
             await client.query('ROLLBACK');
             return res.status(404).json({ error: "Partido no encontrado." });
@@ -166,11 +182,25 @@ const cargarResultado = async (req, res) => {
             return res.status(400).json({ error: "Este partido ya tiene un resultado cargado." });
         }
 
+        // Los partidos de playoffs no admiten empate: alguien tiene que avanzar.
+        const esPlayoff = checkMatch.rows[0].phase !== 'regular';
+        if (esPlayoff && Number(local_points) === Number(visitor_points)) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ error: "Un partido de playoffs no puede terminar empatado." });
+        }
+
         const matchResult = await client.query(
             "UPDATE matches SET local_points = $1, visitor_points = $2, status = 'jugado' WHERE id = $3 RETURNING *",
             [local_points, visitor_points, id]
         );
         const match = matchResult.rows[0];
+
+        // Los playoffs no cuentan para la tabla de posiciones: se guarda el
+        // resultado en matches pero NO se toca team_stats.
+        if (esPlayoff) {
+            await client.query('COMMIT');
+            return res.json({ message: "¡Resultado de playoffs cargado!" });
+        }
 
         const seasonId = match.season_id;
 
@@ -246,7 +276,9 @@ const borrarPartido = async (req, res) => {
 
         const partido = matchResult.rows[0];
 
-        if (partido.status === 'jugado') {
+        // Los playoffs nunca sumaron a team_stats, así que no hay nada que
+        // revertir; restar acá corrompería la tabla de posiciones.
+        if (partido.status === 'jugado' && partido.phase === 'regular') {
             // Revertir estadísticas del equipo local
             await client.query(`
                 UPDATE team_stats SET played = played - 1, points_for = points_for - $1,

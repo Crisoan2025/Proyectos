@@ -88,4 +88,42 @@ const crearTemporada = async (req, res) => {
     }
 };
 
-module.exports = { obtenerTemporadas, obtenerTemporadaActiva, crearTemporada };
+/**
+ * ¿Por qué existe esta función?
+ * Para el panel de "Palmarés" del Home: lista el campeón de cada temporada
+ * y categoría, es decir el ganador del partido de playoffs con phase = 'final'
+ * que ya esté jugado.
+ *
+ * ¿Para qué se hace así (Decisiones de diseño)?
+ * - DISTINCT ON (temporada, categoría): si por error hubiera más de una final
+ *   cargada para la misma temporada/categoría, tomamos la más reciente (id más
+ *   alto) en vez de listar campeones duplicados.
+ * - El ganador se resuelve con CASE sobre los puntos (las finales no admiten
+ *   empate, el backend lo garantiza al cargar el resultado).
+ */
+const obtenerCampeones = async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT DISTINCT ON (s.id, m.category)
+                   s.id   AS season_id,
+                   s.name AS season_name,
+                   m.category,
+                   t.id   AS team_id,
+                   t.name AS team_name,
+                   t.logo_url
+            FROM matches m
+            JOIN seasons s ON m.season_id = s.id
+            JOIN teams t ON t.id = CASE WHEN m.local_points > m.visitor_points
+                                        THEN m.local_team_id
+                                        ELSE m.visitor_team_id END
+            WHERE m.phase = 'final' AND m.status = 'jugado'
+            ORDER BY s.id DESC, m.category ASC, m.id DESC
+        `);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Error al obtener campeones:", err.message);
+        res.status(500).json({ error: "Error al obtener los campeones" });
+    }
+};
+
+module.exports = { obtenerTemporadas, obtenerTemporadaActiva, crearTemporada, obtenerCampeones };
