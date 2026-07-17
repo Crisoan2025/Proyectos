@@ -263,7 +263,6 @@ El panel admin requiere un usuario en la tabla `users` (contraseña hasheada con
 
 - [`backend/DOCUMENTACION_TECNICA.md`](backend/DOCUMENTACION_TECNICA.md) — documentación técnica detallada del backend (esquema completo, flujos, decisiones)
 - [`frontend/DOCUMENTACION_FRONTEND.md`](frontend/DOCUMENTACION_FRONTEND.md) — documentación técnica del frontend (arquitectura, flujo de datos, patrones)
-- [`HANDOFF.md`](HANDOFF.md) — bitácora de desarrollo: sesiones de trabajo, bugs encontrados y corregidos, decisiones de diseño
 - [Wireframe original (PDF)](docs/img/wireframes/wireframe-liga-basquet.pdf) — prototipo mid-fi previo al desarrollo
 
 ---
