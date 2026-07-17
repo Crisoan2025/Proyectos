@@ -12,7 +12,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import CategoryFilter from '../components/CategoryFilter';
 
 const Jugadores = () => {
@@ -74,9 +74,10 @@ const Jugadores = () => {
         <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
           {jugadoresFiltrados.map((j) => (
             <Card key={j.id} className="flex items-center gap-4 bg-nba-card rounded-lg border-nba-border p-4 transition-transform hover:-translate-y-1 hover:shadow-md cursor-default">
-              {/* Avatar shadcn: hoy iniciales (fallback); cuando haya fotos de
-                  jugadores alcanza con agregar <AvatarImage src={...} />. */}
+              {/* Avatar shadcn: muestra la foto si hay photo_url; si no (o si la
+                  imagen falla al cargar) cae automáticamente a las iniciales. */}
               <Avatar className="w-12 h-12 shrink-0">
+                <AvatarImage src={j.photo_url} alt={`${j.name} ${j.surname}`} className="object-cover" />
                 <AvatarFallback className="bg-gradient-to-br from-nba-blue to-nba-dark font-heading font-black text-nba-white tracking-widest shadow-inner">
                   {j.surname?.charAt(0)}{j.name?.charAt(0)}
                 </AvatarFallback>

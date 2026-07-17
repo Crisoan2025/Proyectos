@@ -199,7 +199,14 @@ const Home = () => {
                     <TableRow key={equipo.id} className="transition-colors hover:bg-white/5 border-b-nba-border/50 border-t-0">
                       <TableCell className="text-nba-gray text-[0.8rem] font-bold text-center">{index + 1}</TableCell>
                       <TableCell className="text-left font-bold text-nba-white uppercase text-[0.85rem]">
-                        {equipo.name}
+                        <div className="flex items-center gap-2">
+                          {equipo.logo_url ? (
+                            <img src={equipo.logo_url} alt="" className="w-6 h-6 rounded object-contain bg-white/5 shrink-0" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                          ) : (
+                            <span className="text-sm shrink-0">🏀</span>
+                          )}
+                          {equipo.name}
+                        </div>
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge variant="secondary" className={`text-[0.65rem] font-bold uppercase tracking-[0.5px] border-transparent rounded-sm ${equipo.category === 'Junior' ? 'bg-nba-green/20 text-nba-green hover:bg-nba-green/30' : 'bg-nba-blue/20 text-[#5b8def] hover:bg-nba-blue/30'}`}>

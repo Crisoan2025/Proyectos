@@ -660,3 +660,18 @@ ALTER TABLE ONLY public.team_stats
 --
 
 
+
+--
+-- Migración 002 — Soporte de imágenes (logos de liga/equipos, fotos de jugadores)
+-- Aditiva e idempotente. Mantener en sync con backend/migrations/002_images.sql
+--
+ALTER TABLE public.players ADD COLUMN IF NOT EXISTS photo_url TEXT;
+ALTER TABLE public.teams   ADD COLUMN IF NOT EXISTS logo_url  TEXT;
+
+CREATE TABLE IF NOT EXISTS public.settings (
+    id              integer PRIMARY KEY DEFAULT 1,
+    league_name     varchar(100) DEFAULT 'Liga TPO',
+    league_logo_url TEXT,
+    CONSTRAINT settings_singleton CHECK (id = 1)
+);
+INSERT INTO public.settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;

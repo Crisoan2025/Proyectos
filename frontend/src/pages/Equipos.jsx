@@ -78,7 +78,11 @@ const Equipos = () => {
           <Card key={equipo.id} className="bg-nba-card rounded-lg border border-nba-border transition-all cursor-pointer hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] hover:border-nba-blue" onClick={() => verDetalle(equipo.id)}>
             <CardHeader className="p-5 pb-0">
               <div className="flex items-center gap-3 mb-4">
-                <span className="text-3xl bg-nba-dark w-[50px] h-[50px] rounded-full flex items-center justify-center border border-nba-border">🏀</span>
+                {equipo.logo_url ? (
+                  <img src={equipo.logo_url} alt={equipo.name} className="w-[50px] h-[50px] rounded-full object-cover bg-nba-dark border border-nba-border shrink-0" onError={(e) => { e.currentTarget.outerHTML = '<span class="text-3xl bg-nba-dark w-[50px] h-[50px] rounded-full flex items-center justify-center border border-nba-border shrink-0">🏀</span>'; }} />
+                ) : (
+                  <span className="text-3xl bg-nba-dark w-[50px] h-[50px] rounded-full flex items-center justify-center border border-nba-border shrink-0">🏀</span>
+                )}
                 <div>
                   <CardTitle className="font-heading text-lg font-black uppercase tracking-wide text-nba-white m-0">{equipo.name}</CardTitle>
                   <span className="text-[0.7rem] font-bold uppercase tracking-wider text-nba-gray">{equipo.category}</span>

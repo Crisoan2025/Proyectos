@@ -26,6 +26,7 @@ const PlayerForm = forwardRef(({ equipos, onPlayerSaved }, ref) => {
   const [apellido, setApellido] = useState('');
   const [equipoId, setEquipoId] = useState('');
   const [category, setCategory] = useState('Senior');
+  const [photoUrl, setPhotoUrl] = useState('');
   const [editandoJugadorId, setEditandoJugadorId] = useState(null);
 
   // El padre (Admin) llama a esto desde el botón "editar" de la tabla.
@@ -36,6 +37,7 @@ const PlayerForm = forwardRef(({ equipos, onPlayerSaved }, ref) => {
       setApellido(jugador.surname || '');
       setEquipoId(jugador.team_id ? jugador.team_id.toString() : '');
       setCategory(jugador.category || 'Senior');
+      setPhotoUrl(jugador.photo_url || '');
     },
   }));
 
@@ -44,6 +46,7 @@ const PlayerForm = forwardRef(({ equipos, onPlayerSaved }, ref) => {
     setApellido('');
     setEquipoId('');
     setCategory('Senior');
+    setPhotoUrl('');
     setEditandoJugadorId(null);
   };
 
@@ -59,6 +62,7 @@ const PlayerForm = forwardRef(({ equipos, onPlayerSaved }, ref) => {
         surname: apellido,
         team_id: equipoId || null,
         category,
+        photo_url: photoUrl || null,
       }, true);
 
       if (res.ok) {
@@ -124,6 +128,22 @@ const PlayerForm = forwardRef(({ equipos, onPlayerSaved }, ref) => {
             ))}
           </SelectContent>
         </Select>
+
+        {/* Foto del jugador (URL, opcional) con vista previa */}
+        <div className="flex items-center gap-2.5">
+          {photoUrl ? (
+            <img src={photoUrl} alt="" className="w-10 h-10 rounded-full object-cover border border-nba-border shrink-0" onError={(e) => { e.currentTarget.style.opacity = '0.2'; }} />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-nba-dark border border-nba-border flex items-center justify-center text-nba-gray text-[0.7rem] shrink-0">🏀</div>
+          )}
+          <Input
+            type="url"
+            placeholder="URL de la foto (opcional)"
+            value={photoUrl}
+            onChange={(e) => setPhotoUrl(e.target.value)}
+            className="flex-1 bg-nba-dark border-nba-border text-nba-white placeholder:text-nba-gray"
+          />
+        </div>
 
         <Button type="submit" className={`w-full font-body font-bold uppercase tracking-widest text-white mt-2 flex items-center justify-center gap-2 ${editandoJugadorId ? 'bg-nba-red hover:bg-nba-red/90' : 'bg-nba-green hover:bg-nba-green/90'}`}>
           {editandoJugadorId ? <UserCog className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
