@@ -1,6 +1,6 @@
 # 🏀 Handoff — Proyecto Liga Baloncesto (TPO)
 
-> Documento de traspaso. Resume **todo lo trabajado con Claude Code** en las últimas
+> Documento de traspaso. Resumen en las últimas
 > sesiones (hasta el **2026-06-10**) para que otro agente pueda continuar
 > con contexto completo. No describe el proyecto entero, sino **lo que cambió y por qué**,
 > más el trabajo pendiente recomendado.
