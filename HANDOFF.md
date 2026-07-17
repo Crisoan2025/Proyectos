@@ -323,14 +323,3 @@ Priorizado. **Resueltos al 2026-06-10:** #3 (fuente, PR #7), #4 (mobile nav, PR 
   `frontend/DOCUMENTACION_FRONTEND.md` nueva, assets en `docs/img/` (wireframes del PDF
   convertidos a PNG, capturas de la app y de Supabase).
 
-### ⚠️ Pendientes que siguen abiertos (auditoría 2026-07-03)
-- Hooks de features con mutaciones muertas/rotas: `usePlayers.deletePlayer` llama `api.delete`
-  (no existe; es `del`) y `useMatches.updateMatchScore` usa POST donde el back espera PUT.
-  Nadie las usa hoy — decidir: arreglar y usar, o borrar.
-- `asChild` usado en 5 archivos pero los componentes ui de base-ui usan la API `render`
-  (warnings en consola + `<button>` anidados en Home).
-- `borrarJugador` sin chequeo de `rowCount` (éxito falso con id inexistente).
-- Handler 404 JSON faltante en `index.js` (rutas desconocidas devuelven HTML de Express).
-- Ítems previos de la sección 5 que siguen: contraste WCAG, semántica de color de botones,
-  `withTransaction`, CORS abierto, `{error}` vs `{message}`, uppercase excesivo.
-- ~9 errores de ESLint preexistentes (reglas react-hooks) en `Admin.jsx` y otros.
