@@ -86,7 +86,7 @@ const TeamForm = forwardRef(({ onTeamSaved }, ref) => {
   };
 
   return (
-    <div className={`bg-nba-card p-6 rounded-lg flex-1 min-w-[300px] border ${editandoEquipoId ? 'border-nba-red' : 'border-nba-border'}`}>
+    <div className={`bg-nba-card p-6 rounded-lg w-full xl:w-80 xl:shrink-0 border ${editandoEquipoId ? 'border-nba-red' : 'border-nba-border'}`}>
       <div className={`flex items-center gap-2 mb-4 pb-2.5 border-b-2 ${editandoEquipoId ? 'border-nba-red text-nba-red' : 'border-nba-blue text-nba-blue'}`}>
         {editandoEquipoId ? <Edit2 className="w-5 h-5" /> : <ShieldPlus className="w-5 h-5" />}
         <h3 className="font-heading text-base font-bold tracking-wide m-0 text-nba-white block">
