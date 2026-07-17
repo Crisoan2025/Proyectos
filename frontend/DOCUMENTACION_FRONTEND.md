@@ -1,4 +1,4 @@
-# ⚛️ Documentación Técnica — Frontend Liga de Baloncesto TPO
+#  Documentación Técnica — Frontend Liga de Baloncesto TPO
 
 ## 1. Información General
 
