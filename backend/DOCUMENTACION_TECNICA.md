@@ -60,6 +60,10 @@ Frontend (React + Vite)          Backend (Node.js + Express)          Base de Da
 backend/
 ├── .env                          # Variables de entorno (NO se sube al repo)
 ├── package.json                  # Dependencias y metadatos del proyecto
+├── migrations/                   # Cambios de esquema versionados (SQL idempotente)
+│   ├── run.js                    # Runner: node migrations/run.js <archivo.sql>
+│   ├── 002_images.sql            # photo_url, logo_url y tabla settings
+│   └── 003_playoffs.sql          # Columna matches.phase (playoffs)
 ├── src/
 │   ├── index.js                  # Punto de entrada del servidor
 │   ├── db.js                     # Configuración de conexión a PostgreSQL
@@ -68,13 +72,17 @@ backend/
 │   │   ├── equiposController.js  # CRUD de equipos + tabla de posiciones
 │   │   ├── jugadoresController.js# CRUD de jugadores
 │   │   ├── partidosController.js # CRUD de partidos + carga de resultados
-│   │   └── temporadasController.js # Gestión de temporadas
+│   │   ├── temporadasController.js # Gestión de temporadas + palmarés
+│   │   └── settingsController.js # Branding global de la liga (nombre + logo)
 │   ├── routes/                   # Definición de rutas HTTP
 │   │   ├── auth.js               # POST /api/auth/login
 │   │   ├── equipos.js            # CRUD /api/equipos
 │   │   ├── jugadores.js          # CRUD /api/jugadores
 │   │   ├── partidos.js           # CRUD /api/partidos
-│   │   └── temporadas.js         # CRUD /api/temporadas
+│   │   ├── temporadas.js         # /api/temporadas (+/activa, /campeones)
+│   │   └── settings.js           # GET/PUT /api/settings
+│   ├── helpers/
+│   │   └── seasonHelper.js       # getActiveSeasonId() reutilizado por controllers
 │   └── middlewares/              # Funciones intermedias
 │       └── authMiddleware.js     # Verificación de token JWT
 ```
@@ -136,6 +144,7 @@ backend/
 | `coach_name` | VARCHAR | Nombre del director técnico |
 | `stadium` | VARCHAR | Estadio local del equipo |
 | `category` | VARCHAR(20) | Categoría de competencia: "Senior" o "Junior" |
+| `logo_url` | TEXT | URL del logo del equipo (opcional, migración 002) |
 
 #### `team_stats` — Estadísticas por equipo por temporada
 | Columna | Tipo | Descripción |
@@ -161,6 +170,7 @@ backend/
 | `surname` | VARCHAR | Apellido del jugador |
 | `category` | VARCHAR | Categoría: "Senior" o "Junior" |
 | `team_id` | INTEGER FK | Equipo al que pertenece (nullable: puede ser agente libre) |
+| `photo_url` | TEXT | URL de la foto del jugador (opcional, migración 002) |
 
 #### `matches` — Partidos programados y jugados
 | Columna | Tipo | Descripción |
@@ -176,6 +186,9 @@ backend/
 | `local_points` | INTEGER | Puntos anotados por el equipo local |
 | `visitor_points` | INTEGER | Puntos anotados por el equipo visitante |
 | `status` | VARCHAR | Estado: "pendiente" o "jugado" |
+| `phase` | VARCHAR(20) | Fase del partido: `regular` (default) \| `cuartos` \| `semis` \| `final` (migración 003) |
+
+> **Regla de negocio (playoffs):** los partidos con `phase != 'regular'` **no actualizan `team_stats`** (no afectan la tabla de posiciones), **no admiten empates** al cargar el resultado, y al borrarse no revierten estadísticas (nunca las sumaron). El bracket del frontend se alimenta de estos partidos para hacer avanzar a los ganadores.
 
 #### `users` — Administradores del sistema
 | Columna | Tipo | Descripción |
@@ -183,6 +196,13 @@ backend/
 | `id` | SERIAL PK | Identificador único |
 | `email` | VARCHAR | Correo electrónico (credencial de acceso) |
 | `password` | VARCHAR | Contraseña encriptada con bcrypt |
+
+#### `settings` — Branding global de la liga (singleton)
+| Columna | Tipo | Descripción |
+|---|---|---|
+| `id` | INTEGER PK | Siempre `1` (constraint CHECK garantiza una sola fila) |
+| `league_name` | VARCHAR(100) | Nombre de la liga que muestran navbar y hero |
+| `league_logo_url` | TEXT | URL del logo de la liga (opcional) |
 
 ---
 
@@ -220,6 +240,7 @@ backend/
 |---|---|---|---|
 | `GET` | `/api/temporadas` | No | Lista todas las temporadas |
 | `GET` | `/api/temporadas/activa` | No | Devuelve la temporada activa |
+| `GET` | `/api/temporadas/campeones` | No | Palmarés: campeón por temporada y categoría (ganador de la final de playoffs jugada) |
 | `POST` | `/api/temporadas` | Sí 🔒 | Crea nueva temporada (desactiva la anterior) |
 
 **Body para crear (POST):**
@@ -280,10 +301,10 @@ backend/
 
 | Método | Ruta | Protegida | Query Params | Descripción |
 |---|---|---|---|---|
-| `GET` | `/api/partidos` | No | `?category=Senior&season_id=1` | Fixture completo |
-| `POST` | `/api/partidos` | Sí 🔒 | — | Programar partido nuevo |
-| `PUT` | `/api/partidos/:id` | Sí 🔒 | — | Reprogramar fecha/hora/lugar |
-| `PUT` | `/api/partidos/:id/resultado` | Sí 🔒 | — | Cargar resultado y actualizar standings |
+| `GET` | `/api/partidos` | No | `?category=Senior&season_id=1&phase=cuartos` | Fixture completo (filtros opcionales) |
+| `POST` | `/api/partidos` | Sí 🔒 | — | Programar partido nuevo (acepta `phase`) |
+| `PUT` | `/api/partidos/:id` | Sí 🔒 | — | Reprogramar fecha/hora/lugar/fase |
+| `PUT` | `/api/partidos/:id/resultado` | Sí 🔒 | — | Cargar resultado (regular: actualiza standings; playoffs: no) |
 | `DELETE` | `/api/partidos/:id` | Sí 🔒 | — | Cancelar y eliminar partido |
 
 **Body para programar:**
@@ -293,9 +314,12 @@ backend/
   "visitor_team_id": 2,
   "match_date": "2026-05-15",
   "match_time": "21:30",
-  "location": "Estadio Nacional"
+  "location": "Estadio Nacional",
+  "phase": "regular"
 }
 ```
+
+> `phase` es opcional (default `"regular"`). Valores válidos: `regular`, `cuartos`, `semis`, `final`.
 
 **Body para cargar resultado:**
 ```json
@@ -304,6 +328,15 @@ backend/
   "visitor_points": 98
 }
 ```
+
+---
+
+### ⚙️ Settings (branding de la liga)
+
+| Método | Ruta | Protegida | Descripción |
+|---|---|---|---|
+| `GET` | `/api/settings` | No | Nombre y logo de la liga (consumido por navbar y hero) |
+| `PUT` | `/api/settings` | Sí 🔒 | Actualizar nombre y/o logo de la liga |
 
 ---
 
@@ -368,6 +401,11 @@ Este es el proceso más crítico del sistema. Al cargar un resultado se ejecutan
 | Victoria | +3 puntos | +0 puntos |
 | Empate | +1 punto | +1 punto |
 
+**Excepción — partidos de playoffs (`phase != 'regular'`):**
+- El resultado se guarda en `matches` pero **NO se toca `team_stats`** (la tabla de posiciones queda congelada como terminó la fase regular).
+- El empate se **rechaza** con 400: en playoffs alguien tiene que avanzar.
+- Al borrar un partido de playoffs jugado tampoco se revierten estadísticas (nunca se sumaron).
+
 ---
 
 ## 8. Middleware de Seguridad
@@ -415,8 +453,11 @@ PORT=3000
 | Crear partido | Un equipo no puede jugar contra sí mismo | 400 |
 | Crear partido | Ambos equipos deben ser de la misma categoría | 400 |
 | Crear partido | Debe existir una temporada activa | 400 |
+| Crear/editar partido | `phase` debe ser regular/cuartos/semis/final | 400 |
 | Cargar resultado | Puntos de ambos equipos obligatorios | 400 |
 | Cargar resultado | Puntos no pueden ser negativos | 400 |
+| Cargar resultado | Partidos de playoffs no pueden empatar | 400 |
+| Cargar resultado | No se puede cargar dos veces (status ya "jugado") | 400 |
 | Login | Rate Limiting: máx. 5 intentos / 15 min | 429 |
 | Rutas protegidas | Token JWT válido y no expirado | 401/403 |
 
@@ -448,3 +489,15 @@ npx nodemon src/index.js
 ```
 
 El servidor se levanta en `http://localhost:3000`.
+
+### Migraciones
+
+Los cambios de esquema posteriores al schema inicial se aplican con el runner propio (scripts SQL idempotentes — se pueden correr más de una vez sin error):
+
+```bash
+cd backend
+node migrations/run.js 002_images.sql    # photo_url (players), logo_url (teams), tabla settings
+node migrations/run.js 003_playoffs.sql  # columna matches.phase
+```
+
+El runner usa la misma conexión que la app (`src/db.js`): `DATABASE_URL` (Supabase) o las credenciales locales del `.env`.

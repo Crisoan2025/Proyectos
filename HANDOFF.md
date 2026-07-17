@@ -281,3 +281,56 @@ Priorizado. **Resueltos al 2026-06-10:** #3 (fuente, PR #7), #4 (mobile nav, PR 
   disparado desde la tabla por el padre (`MatchForm` y ahora `TeamForm`).
 - **Auth:** JWT en `localStorage`, `AuthContext` centraliza `isAuthenticated`/`login`/`logout`;
   `ProtectedRoute` redirige a `/login` si no hay sesión.
+
+---
+
+## 7. Sesiones de julio 2026 — Playoffs, entrega y documentación
+
+### 🖼️ PR #8 — Imágenes (Fase 1: URLs) `feat/images`
+- Migración **002**: `players.photo_url`, `teams.logo_url` y tabla `settings` (singleton id=1
+  con `league_name` + `league_logo_url`). Runner propio: `node migrations/run.js <archivo.sql>`.
+- Fotos de jugadores con `Avatar + AvatarFallback` (iniciales); logos de equipos en standings,
+  cards públicas y admin (fallback 🏀); sección **Liga** en el admin para el branding global,
+  consumido en vivo por navbar/hero vía `SettingsContext`.
+- Fase 2 (upload real a Supabase Storage) quedó explícitamente diferida.
+
+### 🏆 PR #9 — Playoffs funcionales, filtros y fixes `feat/playoffs-y-filtros`
+- Migración **003**: columna `matches.phase` (`regular` default | `cuartos` | `semis` | `final`).
+- **Reglas de negocio en backend**: los playoffs NO tocan `team_stats` (ni al cargar resultado
+  ni al revertir en borrado) y no admiten empate (400). `?phase=` como filtro en GET /partidos.
+- **Bracket funcional** (resuelve el pendiente #8 de la sección 5): `PlayoffBracket` recibe los
+  partidos de playoffs y hace avanzar ganadores (cuartos → semis → final → 👑 campeón);
+  `encontrarGanador()` matchea el partido jugado por par de equipos + fase.
+- **Admin**: selector de fase en `MatchForm`, badge dorado 🏆 CUARTOS/SEMIS/FINAL en `MatchTable`.
+- **Jugadores**: dropdown de filtro por equipo (derivado de los propios jugadores + "Agente
+  Libre"), combinable con búsqueda y categoría.
+- **Palmarés en Home** (resuelve el pendiente #5, TITULARES): `GET /api/temporadas/campeones`
+  (ganador de la final por temporada/categoría, `DISTINCT ON` contra duplicados) reemplaza a
+  las noticias hardcodeadas.
+- **Fix Selects de base-ui**: el trigger mostraba el value crudo (id del equipo, "2" en vez del
+  nombre de la temporada). Solución: prop `items={...}` en cada `Select` cuyo value ≠ etiqueta.
+- **Fix layout admin**: los botones editar/borrar quedaban tras un scroll horizontal. Causa
+  doble: form y tabla compartían `flex-1` (50/50) y las celdas shadcn traen `whitespace-nowrap`.
+  Solución: form `xl:w-80` fijo + tabla `flex-1 min-w-0` + `[&_td]:whitespace-normal`.
+- **Comentarios**: banner en `authMiddleware` (estaba sin documentar), config dual explicada en
+  `db.js`, limpieza del ruido línea-por-línea en `routes/jugadores.js`.
+
+### 📦 Entrega (2026-07-16)
+- PRs **#8** y **#9** mergeados a `main` (`3cb87e0`); ramas feature borradas local y remoto.
+- **Documentación de entrega**: `README.md` raíz nuevo (features, wireframes → producto,
+  arquitectura y ER en mermaid, capturas de Supabase, instalación, tabla de endpoints),
+  `DOCUMENTACION_TECNICA.md` actualizada (phase, settings, campeones, migraciones),
+  `frontend/DOCUMENTACION_FRONTEND.md` nueva, assets en `docs/img/` (wireframes del PDF
+  convertidos a PNG, capturas de la app y de Supabase).
+
+### ⚠️ Pendientes que siguen abiertos (auditoría 2026-07-03)
+- Hooks de features con mutaciones muertas/rotas: `usePlayers.deletePlayer` llama `api.delete`
+  (no existe; es `del`) y `useMatches.updateMatchScore` usa POST donde el back espera PUT.
+  Nadie las usa hoy — decidir: arreglar y usar, o borrar.
+- `asChild` usado en 5 archivos pero los componentes ui de base-ui usan la API `render`
+  (warnings en consola + `<button>` anidados en Home).
+- `borrarJugador` sin chequeo de `rowCount` (éxito falso con id inexistente).
+- Handler 404 JSON faltante en `index.js` (rutas desconocidas devuelven HTML de Express).
+- Ítems previos de la sección 5 que siguen: contraste WCAG, semántica de color de botones,
+  `withTransaction`, CORS abierto, `{error}` vs `{message}`, uppercase excesivo.
+- ~9 errores de ESLint preexistentes (reglas react-hooks) en `Admin.jsx` y otros.
