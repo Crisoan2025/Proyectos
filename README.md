@@ -1,4 +1,4 @@
-# 🏀 Liga de Baloncesto — Sistema de Gestión de Liga (TPO)
+#  Liga de Baloncesto — Sistema de Gestión de Liga (TPO)
 
 Aplicación web full-stack para la gestión integral de una liga de baloncesto: portal público para seguir la competencia (posiciones, fixture, playoffs, palmarés) y panel de administración protegido para operarla (equipos, jugadores, partidos, temporadas y branding de la liga).
 
@@ -6,7 +6,7 @@ Aplicación web full-stack para la gestión integral de una liga de baloncesto: 
 
 ---
 
-## 📑 Índice
+##  Índice
 
 1. [Funcionalidades](#-funcionalidades)
 2. [Diseño y prototipado (wireframes)](#-diseño-y-prototipado)
@@ -20,7 +20,7 @@ Aplicación web full-stack para la gestión integral de una liga de baloncesto: 
 
 ---
 
-## ⚙️ Funcionalidades
+##  Funcionalidades
 
 ### Portal público
 
@@ -32,7 +32,7 @@ Aplicación web full-stack para la gestión integral de una liga de baloncesto: 
 
 ![Bracket de playoffs](docs/img/capturas/home-bracket.png)
 
-### Panel de administración (Panel VIP 🔐)
+### Panel de administración (Panel VIP )
 
 - **Partidos**: programar (con fase: temporada regular / cuartos / semis / final), reprogramar, cargar resultados y cancelar. Los partidos de playoffs se marcan con badge 🏆 y **no afectan la tabla de posiciones** (ni admiten empates).
 - **Jugadores y Equipos**: CRUD completo con validaciones de integridad (categorías consistentes entre jugador y equipo, equipos no juegan contra sí mismos).
@@ -43,7 +43,7 @@ Aplicación web full-stack para la gestión integral de una liga de baloncesto: 
 
 ---
 
-## 🎨 Diseño y prototipado
+## Diseño y prototipado
 
 El proyecto partió de un **wireframe mid-fi** ([PDF completo](docs/img/wireframes/wireframe-liga-basquet.pdf)) que definió la estructura de las vistas principales. Comparativa diseño propuesto → producto final:
 
@@ -185,7 +185,7 @@ node migrations/run.js 003_playoffs.sql  # columna matches.phase
 
 ---
 
-## 🚀 Instalación y ejecución
+## Instalación y ejecución
 
 **Requisitos**: Node.js 18+, una base PostgreSQL (local o Supabase).
 
